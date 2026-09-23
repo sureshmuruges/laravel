@@ -20,13 +20,19 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('addresses/export', [AddressController::class, 'export'])->name('addresses.export');
     Route::resource('addresses', AddressController::class);
+    Route::get('company_details/export', [\App\Http\Controllers\CompanyDetailController::class, 'export'])->name('company_details.export');
     Route::resource('company_details', \App\Http\Controllers\CompanyDetailController::class);
     Route::get('particulars/export', [ParticularController::class, 'export'])->name('particulars.export');
     Route::resource('particulars', ParticularController::class);
+    Route::get('bookings/export', [BookingController::class, 'export'])->name('bookings.export');
     Route::resource('bookings', BookingController::class);
+    Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
     Route::resource('expenses', ExpenseController::class);
+    Route::get('invoice_particulars/export', [\App\Http\Controllers\InvoiceParticularController::class, 'export'])->name('invoice_particulars.export');
     Route::resource('invoice_particulars', \App\Http\Controllers\InvoiceParticularController::class);
+    Route::get('invoices/export', [\App\Http\Controllers\InvoiceController::class, 'export'])->name('invoices.export');
     Route::get('invoices/{invoice}/pdf', [\App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::resource('invoices', \App\Http\Controllers\InvoiceController::class);
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

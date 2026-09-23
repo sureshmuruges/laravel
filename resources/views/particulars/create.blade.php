@@ -30,42 +30,30 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label font-weight-bold">Particulars <span class="text-danger">*</span></label>
-                            <input class="form-control" type="text" name="particulars" value="{{ old('particulars') }}" required >
+                            <input class="form-control" type="text" name="particulars" id="particulars" value="{{ old('particulars') }}" maxlength="150" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label font-weight-bold">HSN<span class="text-danger">*</span></label>
-                            <input class="form-control" type="text" name="hsn" value="{{ old('hsn') }}" maxlength="255" required >
+                            <input class="form-control" type="text" name="hsn" id="hsn" value="{{ old('hsn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" required>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label font-weight-bold">GST</label>
-                            <select class="form-select" name="gst">
-                                <option value="0">0.00</option>
-                                <option value="18">18.00</option>
-                            </select>
+                            <input type="text" inputmode="decimal" class="form-control" name="gst" id="gst" value="{{ old('gst', '0') }}" placeholder="Enter GST %">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label font-weight-bold">IGST</label>
-                            <select class="form-select" name="igst">
-                                <option value="0">0.00</option>
-                                <option value="18">18.00</option>
-                            </select>
+                            <input type="text" class="form-control" name="igst" id="igst" value="{{ old('igst', '0') }}" readonly>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label font-weight-bold">CGST</label>
-                            <select class="form-select" name="cgst">
-                                <option value="0">0.00</option>
-                                <option value="9">9.00</option>
-                            </select>
+                            <input type="text" class="form-control" name="cgst" id="cgst" value="{{ old('cgst', '0') }}" readonly>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label font-weight-bold">SGST</label>
-                            <select class="form-select" name="sgst">
-                                <option value="0">0.00</option>
-                                <option value="9">9.00</option>
-                            </select>
+                            <input type="text" class="form-control" name="sgst" id="sgst" value="{{ old('sgst', '0') }}" readonly>
                         </div>
                     </div>
 
@@ -77,25 +65,45 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="is_service" value="1" id="is_service" checked>
-                                <label class="form-check-label" for="is_service">IS Service</label>
-                            </div>
+                            <label class="form-label font-weight-bold d-block">IS Service</label>
+                            <select class="form-select" name="is_service">
+                                <option value="Y" {{ old('is_service', 'Y') == 'Y' ? 'selected' : '' }}>Yes</option>
+                                <option value="N" {{ old('is_service') == 'N' ? 'selected' : '' }}>No</option>
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="active" value="1" id="active" checked>
-                                <label class="form-check-label" for="active">Active</label>
-                            </div>
+                            <label class="form-label font-weight-bold d-block">Active</label>
+                            <select class="form-select" name="active">
+                                <option value="Y" {{ old('active', 'Y') == 'Y' ? 'selected' : '' }}>Yes</option>
+                                <option value="N" {{ old('active') == 'N' ? 'selected' : '' }}>No</option>
+                            </select>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-end mt-4">
                         <button class="btn btn-primary" type="submit">
                             <i class="bi bi-check-circle me-1"></i> Submit
                         </button>
                     </div>
                 </form>
+
+                <script>
+                    document.getElementById('hsn').addEventListener('input', function () {
+                        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                    });
+
+                    function recalcGst() {
+                        const gst = parseFloat(document.getElementById('gst').value) || 0;
+                        document.getElementById('igst').value = gst.toFixed(2);
+                        document.getElementById('cgst').value = (gst / 2).toFixed(2);
+                        document.getElementById('sgst').value = (gst / 2).toFixed(2);
+                    }
+                    document.getElementById('gst').addEventListener('input', recalcGst);
+                    document.getElementById('gst').addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') { e.preventDefault(); recalcGst(); }
+                    });
+                    recalcGst();
+                </script>
             </div>
         </div>
     </div>

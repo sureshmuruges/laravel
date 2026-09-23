@@ -108,6 +108,95 @@
                     </div>
                 </div>
 
+                <!-- Code / Numbering Settings -->
+                <div class="col-12 mt-4">
+                    <div class="p-3 border rounded" style="background-color: #f8f9fa;">
+                        <h6 class="fw-bold text-dark mb-3">Code / Numbering Settings</h6>
+
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="company_code_enabled" name="company_code_enabled" value="1" {{ old('company_code_enabled', $companyDetail->company_code_enabled) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold text-dark" for="company_code_enabled">
+                                Enable Custom Company Code Prefix
+                            </label>
+                        </div>
+                        <div class="form-text mb-2">When enabled, new Address company codes use the prefix below instead of the default "AO" prefix.</div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="company_code_prefix" class="form-label fw-semibold text-dark">Account Code Prefix</label>
+                                <input type="text" class="form-control @error('company_code_prefix') is-invalid @enderror" id="company_code_prefix" name="company_code_prefix" value="{{ old('company_code_prefix', $companyDetail->company_code_prefix ?? 'CEH') }}" maxlength="10" placeholder="CEH">
+                                @error('company_code_prefix')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label for="booking_code_prefix" class="form-label fw-semibold text-dark">Booking / Job Code Prefix</label>
+                                <input type="text" class="form-control @error('booking_code_prefix') is-invalid @enderror" id="booking_code_prefix" name="booking_code_prefix" value="{{ old('booking_code_prefix', $companyDetail->booking_code_prefix) }}" maxlength="20" placeholder="Leave blank to use year-based numbering">
+                                @error('booking_code_prefix')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label for="tax_invoice_prefix" class="form-label fw-semibold text-dark">Tax Invoice Prefix</label>
+                                <input type="text" class="form-control @error('tax_invoice_prefix') is-invalid @enderror" id="tax_invoice_prefix" name="tax_invoice_prefix" value="{{ old('tax_invoice_prefix', $companyDetail->tax_invoice_prefix ?? 'CSHL') }}" maxlength="20" placeholder="CSHL">
+                                @error('tax_invoice_prefix')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Settings -->
+                <div class="col-12 mt-4">
+                    <div class="p-3 border rounded" style="background-color: #f8f9fa;">
+                        <h6 class="fw-bold text-dark mb-3">Invoice PDF Settings</h6>
+
+                        <label class="form-label fw-semibold text-dark d-block">Logo & Address Layout</label>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pdf_logo_address_layout" id="layout_lr" value="logo_left_address_right" {{ old('pdf_logo_address_layout', $companyDetail->pdf_logo_address_layout ?? 'logo_left_address_right') == 'logo_left_address_right' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="layout_lr">Logo left, Address right corner</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pdf_logo_address_layout" id="layout_lc" value="logo_left_address_center" {{ old('pdf_logo_address_layout', $companyDetail->pdf_logo_address_layout) == 'logo_left_address_center' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="layout_lc">Logo left, Address centered</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pdf_logo_address_layout" id="layout_al" value="address_left_logo_right" {{ old('pdf_logo_address_layout', $companyDetail->pdf_logo_address_layout) == 'address_left_logo_right' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="layout_al">Address left, Logo right</label>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="pdf_line_items_rows" class="form-label fw-semibold text-dark">Fixed Line-Item Rows</label>
+                                <input type="number" min="1" max="50" class="form-control @error('pdf_line_items_rows') is-invalid @enderror" id="pdf_line_items_rows" name="pdf_line_items_rows" value="{{ old('pdf_line_items_rows', $companyDetail->pdf_line_items_rows ?? 10) }}">
+                                <div class="form-text">Minimum number of item rows the PDF table always reserves.</div>
+                                @error('pdf_line_items_rows')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="terms_conditions" class="form-label fw-semibold text-dark">Terms & Conditions (printed on PDF)</label>
+                            <textarea class="form-control @error('terms_conditions') is-invalid @enderror" id="terms_conditions" name="terms_conditions" rows="5" placeholder="One term per line...">{{ old('terms_conditions', $companyDetail->terms_conditions) }}</textarea>
+                            @error('terms_conditions')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="irn_qr_enabled" name="irn_qr_enabled" value="1" {{ old('irn_qr_enabled', $companyDetail->irn_qr_enabled) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold text-dark" for="irn_qr_enabled">
+                                Show IRN & QR Code on PDF
+                            </label>
+                        </div>
+                        <div class="form-text ms-4">When enabled, the PDF shows Ack No, Ack Date, IRN and QR Code. When disabled, all four are hidden.</div>
+                    </div>
+                </div>
+
                 <!-- Active Status Toggle -->
                 <div class="col-12 mt-4">
                     <div class="form-check form-switch p-3 border rounded" style="background-color: #f8f9fa;">

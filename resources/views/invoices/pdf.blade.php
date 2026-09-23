@@ -284,35 +284,56 @@ if (!function_exists('numberToWords')) {
 
 @php
     $companyDetail = \App\Models\CompanyDetail::getActive();
+    $pdfLayout = $companyDetail->pdf_logo_address_layout ?? 'logo_left_address_right';
+    $lineItemRows = $companyDetail->pdf_line_items_rows ?? 10;
+    $showIrnQr = $companyDetail ? (bool) $companyDetail->irn_qr_enabled : true;
+
+    $logoCell = '';
+    ob_start();
+    @endphp
+    @if($companyDetail && $companyDetail->logo_path && file_exists(public_path($companyDetail->logo_path)))
+        <img class="header-logo" src="{{ public_path($companyDetail->logo_path) }}" alt="{{ $companyDetail->company_name }} Logo" />
+    @else
+        <img class="header-logo" src="{{ public_path('images/ao_logo.jpg') }}" alt="AO Logistics Logo" />
+    @endif
+    @php
+    $logoCell = ob_get_clean();
+
+    ob_start();
+    @endphp
+    <div class="company-name">{{ $companyDetail ? $companyDetail->company_name : 'AO LOGISTICS' }}</div>
+    <div class="company-details">
+        @if($companyDetail)
+            {!! nl2br(e($companyDetail->address)) !!}<br>
+            Email : {{ $companyDetail->email }}, Tele : {{ $companyDetail->telephone }}<br>
+            STATE CODE : {{ $companyDetail->state_code }}, GST NO : {{ $companyDetail->gst_number }}<br>
+            PAN : {{ $companyDetail->pan }}, TAN : {{ $companyDetail->tan }}
+        @else
+            No. 7, 14th A Main Road, Behind More Mega Mart,<br>
+            Sahakara Nagar, Bengaluru - 560 092. India<br>
+            Email : nandan@aologistics.in, Tele : +91 70222 84895<br>
+            STATE CODE : 29, GST NO : 29AHWPT9984H1ZV<br>
+            PAN : AHWPT9984H, TAN : BLRB24521A
+        @endif
+    </div>
+    @php
+    $addressCell = ob_get_clean();
 @endphp
 <div class="container">
     <!-- COMPANY HEADER -->
     <table class="header-table">
         <tr>
-            <td class="header-logo-cell">
-                @if($companyDetail && $companyDetail->logo_path && file_exists(public_path($companyDetail->logo_path)))
-                    <img class="header-logo" src="{{ public_path($companyDetail->logo_path) }}" alt="{{ $companyDetail->company_name }} Logo" />
-                @else
-                    <img class="header-logo" src="{{ public_path('images/ao_logo.jpg') }}" alt="AO Logistics Logo" />
-                @endif
-            </td>
-            <td class="header-text-cell">
-                <div class="company-name">{{ $companyDetail ? $companyDetail->company_name : 'AO LOGISTICS' }}</div>
-                <div class="company-details">
-                    @if($companyDetail)
-                        {!! nl2br(e($companyDetail->address)) !!}<br>
-                        Email : {{ $companyDetail->email }}, Tele : {{ $companyDetail->telephone }}<br>
-                        STATE CODE : {{ $companyDetail->state_code }}, GST NO : {{ $companyDetail->gst_number }}<br>
-                        PAN : {{ $companyDetail->pan }}, TAN : {{ $companyDetail->tan }}
-                    @else
-                        No. 7, 14th A Main Road, Behind More Mega Mart,<br>
-                        Sahakara Nagar, Bengaluru - 560 092. India<br>
-                        Email : nandan@aologistics.in, Tele : +91 70222 84895<br>
-                        STATE CODE : 29, GST NO : 29AHWPT9984H1ZV<br>
-                        PAN : AHWPT9984H, TAN : BLRB24521A
-                    @endif
-                </div>
-            </td>
+            @if($pdfLayout === 'address_left_logo_right')
+                <td class="header-text-cell" style="text-align: left; padding-right: 0; padding-left: 0;">{!! $addressCell !!}</td>
+                <td class="header-logo-cell" style="text-align: right;">{!! $logoCell !!}</td>
+            @elseif($pdfLayout === 'logo_left_address_center')
+                <td class="header-logo-cell">{!! $logoCell !!}</td>
+                <td class="header-text-cell" style="text-align: center;">{!! $addressCell !!}</td>
+            @else
+                {{-- logo_left_address_right (default) --}}
+                <td class="header-logo-cell">{!! $logoCell !!}</td>
+                <td class="header-text-cell" style="text-align: right; padding-right: 0;">{!! $addressCell !!}</td>
+            @endif
         </tr>
     </table>
 
@@ -353,24 +374,28 @@ if (!function_exists('numberToWords')) {
                         <td style="padding: 0; width: 65%;">
                             <div class="info-row"><span class="fw-bold">Invoice No. :</span> <span class="fw-bold" style="font-size: 10.5px;">{{ $invoice->billno }}</span></div>
                             <div class="info-row"><span class="fw-bold">Invoice Date :</span> {{ \Carbon\Carbon::parse($invoice->billdate)->format('d/m/Y') }}</div>
-                            <div class="info-row" style="margin-top: 6px;"><span class="fw-bold">Ack No. :</span> {{ $invoice->credit_note_no ?? '112631097577649' }}</div>
-                            <div class="info-row"><span class="fw-bold">Ack Date :</span> {{ $invoice->credit_note_date ? \Carbon\Carbon::parse($invoice->credit_note_date)->format('Y-m-d H:i:s') : \Carbon\Carbon::parse($invoice->billdate)->format('Y-m-d') . ' 17:26:00' }}</div>
+                            @if($showIrnQr)
+                                <div class="info-row" style="margin-top: 6px;"><span class="fw-bold">Ack No. :</span> {{ $invoice->credit_note_no ?? '112631097577649' }}</div>
+                                <div class="info-row"><span class="fw-bold">Ack Date :</span> {{ $invoice->credit_note_date ? \Carbon\Carbon::parse($invoice->credit_note_date)->format('Y-m-d H:i:s') : \Carbon\Carbon::parse($invoice->billdate)->format('Y-m-d') . ' 17:26:00' }}</div>
+                            @endif
                             <div class="info-row" style="margin-top: 6px;"><span class="fw-bold">Account Code :</span> {{ $invoice->acode ?? 'A0023' }}</div>
                             <div class="info-row"><span class="fw-bold">Invoice Due on :</span> {{ \Carbon\Carbon::parse($invoice->due_date ?? $invoice->billdate)->format('d/m/Y') }}</div>
                         </td>
-                        <td style="padding: 0; width: 35%; text-align: right; vertical-align: top;">
-                            @if(isset($qrCodeBase64) && $qrCodeBase64)
-                                <img src="{{ $qrCodeBase64 }}" style="height: 70px; width: 70px; border: 1px solid #cccccc;" alt="QR Code" />
-                            @else
-                                @php
-                                    $qrData = urlencode("Invoice No: " . $invoice->billno . "\nGSTIN: 29AHWPT9984H1ZV\nAmount: " . $invoice->grand_total . "\nIRN: " . ($invoice->irn ?? ''));
-                                @endphp
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data={{ $qrData }}" style="height: 70px; width: 70px; border: 1px solid #cccccc;" alt="QR Code" />
-                            @endif
-                        </td>
+                        @if($showIrnQr)
+                            <td style="padding: 0; width: 35%; text-align: right; vertical-align: top;">
+                                @if(isset($qrCodeBase64) && $qrCodeBase64)
+                                    <img src="{{ $qrCodeBase64 }}" style="height: 70px; width: 70px; border: 1px solid #cccccc;" alt="QR Code" />
+                                @else
+                                    @php
+                                        $qrData = urlencode("Invoice No: " . $invoice->billno . "\nGSTIN: 29AHWPT9984H1ZV\nAmount: " . $invoice->grand_total . "\nIRN: " . ($invoice->irn ?? ''));
+                                    @endphp
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data={{ $qrData }}" style="height: 70px; width: 70px; border: 1px solid #cccccc;" alt="QR Code" />
+                                @endif
+                            </td>
+                        @endif
                     </tr>
                 </table>
-                @if($invoice->irn)
+                @if($showIrnQr && $invoice->irn)
                     <div style="font-size: 7px; word-break: break-all; margin-top: 8px; border-top: 1px dashed #dddddd; padding-top: 2px;">
                         <span class="fw-bold">IRN :</span> {{ $invoice->irn }}
                     </div>
@@ -446,7 +471,7 @@ if (!function_exists('numberToWords')) {
             @endforeach
             
             <!-- Spacing row to push the totals down if few items -->
-            @for ($k = count($particulars); $k < 6; $k++)
+            @for ($k = count($particulars); $k < $lineItemRows; $k++)
                 <tr class="item-row" style="height: 18px;">
                     <td style="border-right: 1px solid #000000;"></td>
                     <td style="border-right: 1px solid #000000;"></td>
@@ -504,13 +529,17 @@ if (!function_exists('numberToWords')) {
                 <!-- Terms & Conditions -->
                 <div class="terms-section">
                     <div class="terms-title">Terms & Conditions:</div>
-                    1. Our Billing system start generating E-Invoices from 1st April 2026.<br>
-                    2. Interest @ 2% per month or part thereof or at the rate stipulated in the contract will be imposed on overdue amounts.<br>
-                    3. Payment to be made by cross cheque / Draft in favour of "{{ $companyDetail ? $companyDetail->company_name : 'AO LOGISTICS' }}"<br>
-                    4. Contents of the Invoice will be considered correct if no error is reported within 7 days<br>
-                    5. Payment should be settled within 30 days from the date of Invoice<br>
-                    6. All Objections/Claims are subject to Bengaluru Jurisdiction<br>
-                    7. MSME Udyam Reg No : UDYAM-KR-02-0008928
+                    @if($companyDetail && $companyDetail->terms_conditions)
+                        {!! nl2br(e($companyDetail->terms_conditions)) !!}
+                    @else
+                        1. Our Billing system start generating E-Invoices from 1st April 2026.<br>
+                        2. Interest @ 2% per month or part thereof or at the rate stipulated in the contract will be imposed on overdue amounts.<br>
+                        3. Payment to be made by cross cheque / Draft in favour of "{{ $companyDetail ? $companyDetail->company_name : 'AO LOGISTICS' }}"<br>
+                        4. Contents of the Invoice will be considered correct if no error is reported within 7 days<br>
+                        5. Payment should be settled within 30 days from the date of Invoice<br>
+                        6. All Objections/Claims are subject to Bengaluru Jurisdiction<br>
+                        7. MSME Udyam Reg No : UDYAM-KR-02-0008928
+                    @endif
                 </div>
 
                 <!-- Bank & UPI Grid -->

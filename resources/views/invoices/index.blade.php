@@ -6,7 +6,11 @@
                 <h2 class="h3 mb-1 text-gray-800 fw-bold">Tax Invoices</h2>
                 <p class="text-muted mb-0">Manage your company's tax invoices, proformas, and client billing records.</p>
             </div>
-            <div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('invoices.export', ['search' => request('search')]) }}" class="btn btn-outline-success px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="fas fa-file-excel"></i>
+                    Export to Excel
+                </a>
                 <a href="{{ route('invoices.create') }}" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
                     <i class="fas fa-plus"></i>
                     Create Tax Invoice
@@ -71,7 +75,12 @@
                                         <i class="fas fa-sort-amount-{{ request('sort') == 'company_name' && request('direction') == 'asc' ? 'up' : 'down' }} fs-8"></i>
                                     </a>
                                 </th>
-                                <th>Booking No</th>
+                                <th>
+                                    <a href="{{ route('invoices.index', ['sort' => 'booking_no', 'direction' => request('direction') == 'asc' && request('sort') == 'booking_no' ? 'desc' : 'asc', 'search' => request('search')]) }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-1">
+                                        Booking No
+                                        <i class="fas fa-sort-amount-{{ request('sort') == 'booking_no' && request('direction') == 'asc' ? 'up' : 'down' }} fs-8"></i>
+                                    </a>
+                                </th>
                                 <th class="text-end">
                                     <a href="{{ route('invoices.index', ['sort' => 'grand_total', 'direction' => request('direction') == 'asc' && request('sort') == 'grand_total' ? 'desc' : 'asc', 'search' => request('search')]) }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-1 float-end">
                                         Grand Total

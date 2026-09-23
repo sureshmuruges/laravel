@@ -87,6 +87,26 @@
                                 <span class="text-muted small d-block">TAN Number</span>
                                 <span class="text-dark fw-semibold">{{ $companyDetail->tan ?? 'N/A' }}</span>
                             </div>
+                            <div class="col-md-6 border-bottom pb-2">
+                                <span class="text-muted small d-block">Account Code Prefix</span>
+                                <span class="text-dark fw-semibold">{{ $companyDetail->company_code_enabled ? ($companyDetail->company_code_prefix ?? 'CEH') : 'AO (default)' }}</span>
+                            </div>
+                            <div class="col-md-6 border-bottom pb-2">
+                                <span class="text-muted small d-block">Booking / Job Code Prefix</span>
+                                <span class="text-dark fw-semibold">{{ $companyDetail->booking_code_prefix ?: 'Year-based (default)' }}</span>
+                            </div>
+                            <div class="col-md-6 border-bottom pb-2">
+                                <span class="text-muted small d-block">Tax Invoice Prefix</span>
+                                <span class="text-dark fw-semibold">{{ $companyDetail->tax_invoice_prefix ?? 'CSHL' }}</span>
+                            </div>
+                            <div class="col-md-6 border-bottom pb-2">
+                                <span class="text-muted small d-block">IRN & QR Code on PDF</span>
+                                <span class="text-dark fw-semibold">{{ $companyDetail->irn_qr_enabled ? 'Enabled' : 'Disabled' }}</span>
+                            </div>
+                            <div class="col-12 border-bottom pb-2">
+                                <span class="text-muted small d-block">Terms & Conditions</span>
+                                <span class="text-dark" style="white-space: pre-line;">{{ $companyDetail->terms_conditions ?? 'N/A' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

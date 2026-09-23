@@ -16,6 +16,10 @@
                 </div>
             </form>
 
+            <a href="{{ route('expenses.export', ['search' => request('search')]) }}" class="btn btn-outline-success px-4 shadow">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
+            </a>
+
             <a href="{{ route('expenses.create') }}" class="btn btn-success px-4 shadow">
                 <i class="bi bi-plus-circle me-1"></i> New Expense
             </a>
@@ -61,7 +65,8 @@
                                 class="text-dark text-decoration-none fw-bold">Total{!! sortIcon('Total') !!}</a></th>
                         <th class="py-3"><a href="{{ sortUrl('Currency') }}"
                                 class="text-dark text-decoration-none fw-bold">Curr{!! sortIcon('Currency') !!}</a></th>
-                        <th class="py-3">Reference</th>
+                        <th class="py-3"><a href="{{ sortUrl('Reference') }}"
+                                class="text-dark text-decoration-none fw-bold">Reference{!! sortIcon('Reference') !!}</a></th>
                         <th class="py-3 text-center">Actions</th>
                     </tr>
                 </thead>
@@ -77,21 +82,19 @@
                             <td class="py-3">{{ $expense->Currency }}</td>
                             <td class="py-3">{{ $expense->Reference }}</td>
                             <td class="py-3 text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-primary"
-                                        title="View">
-                                        <i class="bi bi-eye">Show</i>
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View">
+                                        <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('expenses.edit', $expense->id) }}"
-                                        class="btn btn-sm btn-warning text-white" title="Edit">
-                                        <i class="bi bi-pencil">Edit</i>
+                                    <a href="{{ route('expenses.edit', $expense->id) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
+                                        <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST"
-                                        onsubmit="return confirm('Confirm delete?');" style="display:inline;">
+                                        onsubmit="return confirm('Confirm delete?');" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                            <i class="bi bi-trash">Delete</i>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>

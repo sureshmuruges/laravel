@@ -45,33 +45,29 @@
 
             <div class="col-md-4">
                 <label for="companyname" class="form-label">Company Name</label>
-                <input type="text" name="companyname" id="companyname" class="form-control shadow-sm" value="{{ $booking->companyname }}">
+                <input type="text" name="companyname" id="companyname" class="form-control shadow-sm" list="addressNameList" value="{{ $booking->companyname }}">
             </div>
 
             <div class="col-md-4">
                 <label for="shipper" class="form-label">Shipper</label>
-                <input type="text" name="shipper" id="shipper" class="form-control shadow-sm" value="{{ $booking->shipper }}">
+                <input type="text" name="shipper" id="shipper" class="form-control shadow-sm" list="addressNameList" value="{{ $booking->shipper }}">
             </div>
 
             <div class="col-md-4">
                 <label for="Consignee" class="form-label">Consignee</label>
-                <input type="text" name="Consignee" id="Consignee" class="form-control shadow-sm" value="{{ $booking->Consignee }}">
+                <input type="text" name="Consignee" id="Consignee" class="form-control shadow-sm" list="addressNameList" value="{{ $booking->Consignee }}">
             </div>
 
-            <div class="col-md-4">
-                <label for="accode_companyname" class="form-label">Accode Company Name</label>
-                <input type="text" name="accode_companyname" id="accode_companyname" class="form-control shadow-sm" value="{{ $booking->accode_companyname }}">
-            </div>
+            <datalist id="addressNameList">
+                @foreach ($addresses as $addr)
+                    <option value="{{ $addr->CompanyName }}"></option>
+                @endforeach
+            </datalist>
 
-            <div class="col-md-4">
-                <label for="acode_Shipper" class="form-label">Acode Shipper</label>
-                <input type="text" name="acode_Shipper" id="acode_Shipper" class="form-control shadow-sm" value="{{ $booking->acode_Shipper }}">
-            </div>
-
-            <div class="col-md-4">
-                <label for="accode_consignee" class="form-label">Accode Consignee</label>
-                <input type="text" name="accode_consignee" id="accode_consignee" class="form-control shadow-sm" value="{{ $booking->accode_consignee }}">
-            </div>
+            {{-- Acode fields are auto-filled from the selected address above; kept out of the UI per request, still saved to DB. --}}
+            <input type="hidden" name="accode_companyname" id="accode_companyname" value="{{ $booking->accode_companyname }}">
+            <input type="hidden" name="acode_Shipper" id="acode_Shipper" value="{{ $booking->acode_Shipper }}">
+            <input type="hidden" name="accode_consignee" id="accode_consignee" value="{{ $booking->accode_consignee }}">
         </div>
 
         <div class="row g-4 mb-5">
@@ -236,4 +232,26 @@
         </div>
     </form>
 </div>
+
+<script>
+    (function () {
+        var addressByName = {};
+        @foreach ($addresses as $addr)
+            addressByName[{{ Illuminate\Support\Js::from(strtolower($addr->CompanyName)) }}] = {{ Illuminate\Support\Js::from($addr->AccountCode) }};
+        @endforeach
+
+        function wireAutoPopulate(textFieldId, hiddenFieldId) {
+            var textField = document.getElementById(textFieldId);
+            var hiddenField = document.getElementById(hiddenFieldId);
+            textField.addEventListener('input', function () {
+                var match = addressByName[this.value.trim().toLowerCase()];
+                if (match) hiddenField.value = match;
+            });
+        }
+
+        wireAutoPopulate('companyname', 'accode_companyname');
+        wireAutoPopulate('shipper', 'acode_Shipper');
+        wireAutoPopulate('Consignee', 'accode_consignee');
+    })();
+</script>
 @endsection

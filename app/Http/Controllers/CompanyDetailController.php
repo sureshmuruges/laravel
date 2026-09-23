@@ -11,10 +11,49 @@ class CompanyDetailController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
+    {
+        $sortField = $request->input('sort', 'id');
+        $sortDirection = $request->input('direction', 'desc');
+
+        $allowedSorts = ['id', 'company_name', 'email', 'telephone', 'state_code', 'gst_number', 'pan', 'tan', 'is_active'];
+        if (!in_array($sortField, $allowedSorts)) {
+            $sortField = 'id';
+        }
+
+        $companyDetails = CompanyDetail::orderBy($sortField, $sortDirection)->get();
+        return view('company_details.index', compact('companyDetails', 'sortField', 'sortDirection'));
+    }
+
+    /**
+     * Export the company profiles list as an Excel-compatible CSV file.
+     */
+    public function export()
     {
         $companyDetails = CompanyDetail::orderBy('id', 'desc')->get();
-        return view('company_details.index', compact('companyDetails'));
+
+        $columns = ['Id', 'Company Name', 'Address', 'Email', 'Telephone', 'State Code', 'GST Number', 'PAN', 'TAN', 'Active'];
+
+        return response()->streamDownload(function () use ($companyDetails, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($companyDetails as $detail) {
+                fputcsv($file, [
+                    $detail->id,
+                    $detail->company_name,
+                    $detail->address,
+                    $detail->email,
+                    $detail->telephone,
+                    $detail->state_code,
+                    $detail->gst_number,
+                    $detail->pan,
+                    $detail->tan,
+                    $detail->is_active ? 'Yes' : 'No',
+                ]);
+            }
+            fclose($file);
+        }, 'company_details.csv');
     }
 
     /**
@@ -41,10 +80,24 @@ class CompanyDetailController extends Controller
             'tan' => 'nullable|string|max:50',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'is_active' => 'nullable|boolean',
+            'company_code_prefix' => 'nullable|string|max:10',
+            'company_code_enabled' => 'nullable|boolean',
+            'booking_code_prefix' => 'nullable|string|max:20',
+            'tax_invoice_prefix' => 'nullable|string|max:20',
+            'pdf_logo_address_layout' => 'nullable|in:logo_left_address_right,logo_left_address_center,address_left_logo_right',
+            'pdf_line_items_rows' => 'nullable|integer|min:1|max:50',
+            'terms_conditions' => 'nullable|string',
+            'irn_qr_enabled' => 'nullable|boolean',
         ]);
 
         $data = $validated;
         $data['is_active'] = $request->has('is_active');
+        $data['company_code_enabled'] = $request->has('company_code_enabled');
+        $data['company_code_prefix'] = $validated['company_code_prefix'] ?? 'CEH';
+        $data['irn_qr_enabled'] = $request->has('irn_qr_enabled');
+        $data['pdf_logo_address_layout'] = $validated['pdf_logo_address_layout'] ?? 'logo_left_address_right';
+        $data['pdf_line_items_rows'] = $validated['pdf_line_items_rows'] ?? 10;
+        $data['tax_invoice_prefix'] = $validated['tax_invoice_prefix'] ?? 'CSHL';
 
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
@@ -102,10 +155,24 @@ class CompanyDetailController extends Controller
             'tan' => 'nullable|string|max:50',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'is_active' => 'nullable|boolean',
+            'company_code_prefix' => 'nullable|string|max:10',
+            'company_code_enabled' => 'nullable|boolean',
+            'booking_code_prefix' => 'nullable|string|max:20',
+            'tax_invoice_prefix' => 'nullable|string|max:20',
+            'pdf_logo_address_layout' => 'nullable|in:logo_left_address_right,logo_left_address_center,address_left_logo_right',
+            'pdf_line_items_rows' => 'nullable|integer|min:1|max:50',
+            'terms_conditions' => 'nullable|string',
+            'irn_qr_enabled' => 'nullable|boolean',
         ]);
 
         $data = $validated;
         $data['is_active'] = $request->has('is_active');
+        $data['company_code_enabled'] = $request->has('company_code_enabled');
+        $data['company_code_prefix'] = $validated['company_code_prefix'] ?? 'CEH';
+        $data['irn_qr_enabled'] = $request->has('irn_qr_enabled');
+        $data['pdf_logo_address_layout'] = $validated['pdf_logo_address_layout'] ?? 'logo_left_address_right';
+        $data['pdf_line_items_rows'] = $validated['pdf_line_items_rows'] ?? 10;
+        $data['tax_invoice_prefix'] = $validated['tax_invoice_prefix'] ?? 'CSHL';
 
         if ($request->hasFile('logo')) {
             // Delete old logo if exists

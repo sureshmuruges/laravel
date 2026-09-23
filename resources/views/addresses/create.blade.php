@@ -20,21 +20,22 @@
                 <form action="{{ route('addresses.store') }}" method="POST">
                     @csrf
 
-                    {{-- Row 1: Type | Account Code --}}
+                    {{-- Row 1: Type | Company Code --}}
                     <div class="row mb-3">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <label for="Type" class="form-label fw-bold">User Type</label>
                             <select class="form-select form-control" id="Type" name="Type">
-                                <option value="client" {{ old('Type', 'client') == 'client' ? 'selected' : '' }}>Client
-                                </option>
+                                <option value="client" {{ old('Type', 'client') == 'client' ? 'selected' : '' }}>Client</option>
                                 <option value="vendor" {{ old('Type') == 'vendor' ? 'selected' : '' }}>Vendor</option>
                                 <option value="both" {{ old('Type') == 'both' ? 'selected' : '' }}>Both</option>
+                                <option value="shipper" {{ old('Type') == 'shipper' ? 'selected' : '' }}>Shipper</option>
+                                <option value="consignee" {{ old('Type') == 'consignee' ? 'selected' : '' }}>Consignee</option>
                             </select>
                             <small class="text-muted">Default: Client</small>
                         </div>
                         <div class="col-md-6">
                             <label for="AccountCode" class="form-label fw-bold">
-                                Account Code (AO) <span class="text-danger">*</span>
+                                Company Code <span class="text-danger">*</span>
                             </label>
                             <input type="text" class="form-control" id="AccountCode" name="AccountCode"
                                 value="{{ old('AccountCode', $nextAccountCode) }}" placeholder="{{ $nextAccountCode }}"
@@ -56,8 +57,7 @@
                             <label for="Country" class="form-label fw-bold">
                                 Country <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select form-control" id="Country" name="Country" required
-                                onchange="handleCountryChange()">
+                            <select class="form-select form-control" id="Country" name="Country" required>
                                 <option value="">Select Country</option>
                                 <option value="India" {{ old('Country') == 'India' ? 'selected' : '' }}>India</option>
                                 <option value="Other Than India" {{ old('Country') == 'Other Than India' ? 'selected' : '' }}>
@@ -99,22 +99,20 @@
                             <label id="PincodeLabel" for="Pincode" class="form-label fw-bold">
                                 Pincode <span id="PincodeStar" class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control" id="Pincode" name="Pincode"
+                            <input type="text" class="form-control" id="Pincode" name="Pincode" inputmode="numeric"
                                 value="{{ old('Pincode') }}">
                             <small id="PincodeHelp" class="text-muted"></small>
                         </div>
                     </div>
 
-                    {{-- State row (India only) --}}
+                    {{-- State row --}}
                     <div class="row mb-3" id="stateRow">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <label for="ddl_StateName" class="form-label fw-bold">
-                                State <span class="text-danger">*</span>
+                                State <span id="StateStar" class="text-danger">*</span>
                             </label>
-                            <select name="ddl_StateName" id="ddl_StateName" class="form-select form-control"
-                                onchange="updateState()">
+                            <select name="ddl_StateName" id="ddl_StateName" class="form-select form-control">
                                 <option value="">---Select State---</option>
-                                <option value="96">OTHER THAN INDIA</option>
                                 <option value="99">CENTRE JURISDICTION</option>
                                 <option value="97">OTHER TERRITORY</option>
                                 <option value="35">ANDAMAN AND NICOBAR ISLANDS</option>
@@ -157,7 +155,11 @@
                                 <option value="19">WEST BENGAL</option>
                             </select>
                             <input type="hidden" id="State" name="State" value="{{ old('State') }}">
-                            <input type="hidden" id="StateCode" name="StateCode" value="{{ old('StateCode') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="StateCode" class="form-label fw-bold">State Code</label>
+                            <input type="text" class="form-control" id="StateCode" name="StateCode"
+                                value="{{ old('StateCode') }}" readonly>
                         </div>
                     </div>
 
@@ -220,166 +222,136 @@
     </div>
 
     <script>
-        // -------------------------------------------------------------------------
-        // Update hidden State / StateCode when the state dropdown changes
-        // -------------------------------------------------------------------------
-        function updateState() {
-            var selectedVal = $('#ddl_StateName').val();
-            var selectedText = $('#ddl_StateName option:selected').text();
+        (function () {
+            var stateSelect = document.getElementById('ddl_StateName');
+            var stateHidden = document.getElementById('State');
+            var stateCodeInput = document.getElementById('StateCode');
+            var countrySelect = document.getElementById('Country');
+            var pincodeInput = document.getElementById('Pincode');
+            var gstInput = document.getElementById('GSTNo');
 
-            if (selectedVal) {
-                $('#StateCode').val(selectedVal);
-                $('#State').val(selectedText);
-            } else {
-                $('#StateCode').val('');
-                $('#State').val('');
-            }
-        }
-
-        // -------------------------------------------------------------------------
-        // Adjust form fields based on country selection
-        // -------------------------------------------------------------------------
-        function handleCountryChange() {
-            var country = $('#Country').val();
-
-            if (country === 'India') {
-                // ----- INDIA -----
-
-                // Show state selector
-                $('#stateRow').css('display', 'flex');
-                $('#ddl_StateName').prop('required', true);
-
-                // Address Line 1 – required, max 100
-                $('#ALine1').prop({ required: true, maxlength: 100 });
-                $('#ALine1Star').show();
-                $('#ALine1Help').text('Required (max 100 characters)');
-
-                // Address Line 2 – required, max 100
-                $('#ALine2').prop({ required: true, maxlength: 100 });
-                $('#ALine2Star').show();
-                $('#ALine2Help').text('Required (max 100 characters)');
-
-                // Location – required
-                $('#Location').prop('required', true);
-                $('#LocationStar').show();
-
-                // Pincode – required, exactly 6 digits
-                var currentPincode = $('#Pincode').val();
-                $('#Pincode').prop({
-                    required: true,
-                    readonly: false,
-                    maxlength: 6,
-                    minlength: 6
-                }).val(currentPincode === '999999' ? '' : currentPincode);
-                $('#PincodeStar').show();
-                $('#PincodeHelp').text('6 digits mandatory');
-
-                // GST – required, exactly 16 characters
-                $('#GSTNoLabel').html('GST No <span class="text-danger">*</span>');
-                if ($('#GSTNo').val() === 'URP') { $('#GSTNo').val(''); }
-                $('#GSTNo').prop({
-                    readonly: false,
-                    required: true,
-                    maxlength: 16,
-                    minlength: 16
-                });
-                $('#GSTNoHelp').text('Exactly 16 characters required');
-
-            } else if (country !== '') {
-                // ----- OTHER THAN INDIA -----
-
-                // Hide state selector, set defaults
-                $('#stateRow').hide();
-                $('#ddl_StateName').prop('required', false).val('');
-                $('#StateCode').val('96');
-                $('#State').val('OTHER THAN INDIA');
-
-                // Address Line 1 – optional, max 60 chars
-                $('#ALine1').prop({ required: false, maxlength: 60 });
-                $('#ALine1Star').hide();
-                $('#ALine1Help').text('Optional (max 60 characters)');
-
-                // Address Line 2 – optional, max 60 chars
-                $('#ALine2').prop({ required: false, maxlength: 60 });
-                $('#ALine2Star').hide();
-                $('#ALine2Help').text('Optional (max 60 characters)');
-
-                // Location – optional
-                $('#Location').prop('required', false);
-                $('#LocationStar').hide();
-
-                // Pincode – fixed 999999, not editable
-                $('#Pincode')
-                    .val('999999')
-                    .prop({ readonly: true, required: false })
-                    .removeAttr('minlength maxlength');
-                $('#PincodeStar').hide();
-                $('#PincodeHelp').text('Default 999999 (non-editable for non-India)');
-
-                // GST – fixed to URP, not editable
-                $('#GSTNoLabel').text('GST No');
-                $('#GSTNo')
-                    .val('URP')
-                    .prop({ readonly: true, required: false })
-                    .removeAttr('minlength maxlength');
-                $('#GSTNoHelp').text('Defaults to URP for non-India');
-
-            } else {
-                // ----- NO COUNTRY SELECTED – reset to neutral -----
-
-                $('#stateRow').hide();
-                $('#ddl_StateName').prop('required', false);
-
-                // Address Line 1
-                $('#ALine1').prop({ required: false, maxlength: 100 });
-                $('#ALine1Star').show();
-                $('#ALine1Help').text('');
-
-                // Address Line 2
-                $('#ALine2').prop({ required: false, maxlength: 100 });
-                $('#ALine2Star').show();
-                $('#ALine2Help').text('');
-
-                // Location
-                $('#Location').prop('required', false);
-                $('#LocationStar').show();
-
-                // Pincode – reset
-                $('#Pincode')
-                    .val('')
-                    .prop({ readonly: false, required: false })
-                    .removeAttr('minlength maxlength');
-                $('#PincodeStar').show();
-                $('#PincodeHelp').text('');
-
-                // GST – reset
-                $('#GSTNoLabel').text('GST No');
-                $('#GSTNo')
-                    .prop({ readonly: false, required: false })
-                    .removeAttr('minlength maxlength');
-                $('#GSTNoHelp').text('');
-            }
-        }
-
-        $(document).ready(function () {
-            // Pre-select state dropdown if we have an existing StateCode value
-            var stateVal = $('#StateCode').val();
-            if (stateVal) {
-                $('#ddl_StateName').val(stateVal);
+            function updateState() {
+                var opt = stateSelect.options[stateSelect.selectedIndex];
+                if (stateSelect.value) {
+                    stateCodeInput.value = stateSelect.value;
+                    stateHidden.value = opt.text;
+                } else {
+                    stateCodeInput.value = '';
+                    stateHidden.value = '';
+                }
             }
 
-            // Trigger country change logic on page load (e.g. after validation error)
+            function handleCountryChange() {
+                var country = countrySelect.value;
+                var stateRow = document.getElementById('stateRow');
+                var aline1 = document.getElementById('ALine1');
+                var aline2 = document.getElementById('ALine2');
+                var location = document.getElementById('Location');
+
+                if (country === 'India') {
+                    stateSelect.disabled = false;
+                    stateSelect.required = true;
+                    document.getElementById('StateStar').style.display = '';
+                    stateCodeInput.readOnly = true;
+
+                    aline1.required = true;
+                    aline1.maxLength = 100;
+                    document.getElementById('ALine1Star').style.display = '';
+                    document.getElementById('ALine1Help').textContent = 'Required (max 100 characters)';
+
+                    aline2.required = true;
+                    aline2.maxLength = 100;
+                    document.getElementById('ALine2Star').style.display = '';
+                    document.getElementById('ALine2Help').textContent = 'Required (max 100 characters)';
+
+                    location.required = true;
+                    document.getElementById('LocationStar').style.display = '';
+
+                    if (pincodeInput.value === '999999') pincodeInput.value = '';
+                    pincodeInput.required = true;
+                    pincodeInput.readOnly = false;
+                    pincodeInput.maxLength = 6;
+                    document.getElementById('PincodeStar').style.display = '';
+                    document.getElementById('PincodeHelp').textContent = '6 digits mandatory';
+
+                    document.getElementById('GSTNoLabel').innerHTML = 'GST No <span class="text-danger">*</span>';
+                    if (gstInput.value === 'URD') gstInput.value = '';
+                    gstInput.readOnly = false;
+                    gstInput.required = true;
+                    gstInput.maxLength = 16;
+                    document.getElementById('GSTNoHelp').textContent = 'Exactly 16 characters required';
+
+                    updateState();
+                } else if (country !== '') {
+                    // ----- OTHER THAN INDIA -----
+                    stateSelect.disabled = true;
+                    stateSelect.required = false;
+                    stateSelect.value = '';
+                    document.getElementById('StateStar').style.display = 'none';
+                    stateHidden.value = '';
+                    stateCodeInput.value = '91';
+                    stateCodeInput.readOnly = true;
+
+                    aline1.required = false;
+                    aline1.maxLength = 60;
+                    document.getElementById('ALine1Star').style.display = 'none';
+                    document.getElementById('ALine1Help').textContent = 'Optional (max 60 characters)';
+
+                    aline2.required = false;
+                    aline2.maxLength = 60;
+                    document.getElementById('ALine2Star').style.display = 'none';
+                    document.getElementById('ALine2Help').textContent = 'Optional (max 60 characters)';
+
+                    location.required = false;
+                    document.getElementById('LocationStar').style.display = 'none';
+
+                    pincodeInput.value = '999999';
+                    pincodeInput.readOnly = true;
+                    pincodeInput.required = false;
+                    document.getElementById('PincodeStar').style.display = 'none';
+                    document.getElementById('PincodeHelp').textContent = 'Default 999999 (non-editable for non-India)';
+
+                    document.getElementById('GSTNoLabel').textContent = 'GST No';
+                    gstInput.value = 'URD';
+                    gstInput.readOnly = true;
+                    gstInput.required = false;
+                    document.getElementById('GSTNoHelp').textContent = 'Defaults to URD for non-India';
+                } else {
+                    // No country selected yet
+                    stateSelect.disabled = false;
+                    stateSelect.required = false;
+                    stateCodeInput.readOnly = true;
+
+                    aline1.required = false;
+                    document.getElementById('ALine1Help').textContent = '';
+                    aline2.required = false;
+                    document.getElementById('ALine2Help').textContent = '';
+                    location.required = false;
+
+                    pincodeInput.readOnly = false;
+                    pincodeInput.required = false;
+                    document.getElementById('PincodeHelp').textContent = '';
+
+                    gstInput.readOnly = false;
+                    gstInput.required = false;
+                    document.getElementById('GSTNoHelp').textContent = '';
+                }
+            }
+
+            // Numeric-only Pincode input
+            pincodeInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            });
+
+            stateSelect.addEventListener('change', updateState);
+            countrySelect.addEventListener('change', handleCountryChange);
+
+            // Elements above this script already exist in the DOM, so initialize immediately
+            // rather than waiting on DOMContentLoaded (which may have already fired by now).
+            if (stateCodeInput.value) {
+                stateSelect.value = stateCodeInput.value;
+            }
             handleCountryChange();
-
-            // Bind country change event via jQuery
-            $('#Country').on('change', function () {
-                handleCountryChange();
-            });
-
-            // Bind state change event via jQuery
-            $('#ddl_StateName').on('change', function () {
-                updateState();
-            });
-        });
+        })();
     </script>
 @endsection

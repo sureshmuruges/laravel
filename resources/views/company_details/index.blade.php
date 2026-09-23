@@ -4,21 +4,60 @@
     <div class="px-4 py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="h5 font-weight-bold text-dark mb-0">Manage Company Profiles</h3>
-            <a href="{{ route('company_details.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Add Company Profile
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('company_details.export') }}" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
+                </a>
+                <a href="{{ route('company_details.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Add Company Profile
+                </a>
+            </div>
         </div>
 
         <div class="table-responsive">
+            @php
+                if (!function_exists('sortIcon')) {
+                    function sortIcon($field)
+                    {
+                        $sortField = request('sort', 'id');
+                        $sortDirection = request('direction', 'desc');
+                        if ($sortField === $field) {
+                            return $sortDirection === 'asc' ? ' ↑' : ' ↓';
+                        }
+                        return '';
+                    }
+                }
+                if (!function_exists('sortUrl')) {
+                    function sortUrl($field)
+                    {
+                        $sortField = request('sort', 'id');
+                        $sortDirection = request('direction', 'desc');
+                        $direction = ($sortField === $field && $sortDirection === 'asc') ? 'desc' : 'asc';
+                        return request()->fullUrlWithQuery(['sort' => $field, 'direction' => $direction]);
+                    }
+                }
+            @endphp
             <table class="table table-striped table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th class="py-3 px-3">Logo</th>
-                        <th class="py-3 px-3">Company Name</th>
-                        <th class="py-3 px-3">Contact Details</th>
-                        <th class="py-3 px-3">State Code / GST</th>
-                        <th class="py-3 px-3">Tax Numbers (PAN/TAN)</th>
-                        <th class="py-3 px-3">Status</th>
+                        <th class="py-3 px-3"><a href="{{ sortUrl('company_name') }}" class="text-dark text-decoration-none fw-bold">Company Name{!! sortIcon('company_name') !!}</a></th>
+                        <th class="py-3 px-3">
+                            <a href="{{ sortUrl('email') }}" class="text-dark text-decoration-none fw-bold">Email{!! sortIcon('email') !!}</a>
+                            /
+                            <a href="{{ sortUrl('telephone') }}" class="text-dark text-decoration-none fw-bold">Phone{!! sortIcon('telephone') !!}</a>
+                        </th>
+                        <th class="py-3 px-3">
+                            <a href="{{ sortUrl('state_code') }}" class="text-dark text-decoration-none fw-bold">State Code{!! sortIcon('state_code') !!}</a>
+                            /
+                            <a href="{{ sortUrl('gst_number') }}" class="text-dark text-decoration-none fw-bold">GST{!! sortIcon('gst_number') !!}</a>
+                        </th>
+                        <th class="py-3 px-3">
+                            <a href="{{ sortUrl('pan') }}" class="text-dark text-decoration-none fw-bold">PAN{!! sortIcon('pan') !!}</a>
+                            /
+                            <a href="{{ sortUrl('tan') }}" class="text-dark text-decoration-none fw-bold">TAN{!! sortIcon('tan') !!}</a>
+                        </th>
+                        <th class="py-3 px-3"><a href="{{ sortUrl('is_active') }}" class="text-dark text-decoration-none fw-bold">Status{!! sortIcon('is_active') !!}</a></th>
                         <th class="py-3 px-3 text-end">Actions</th>
                     </tr>
                 </thead>
@@ -61,20 +100,20 @@
                                 @endif
                             </td>
                             <td class="py-3 px-3 text-end">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('company_details.show', $detail->id) }}" class="btn btn-info text-white" title="View">
-                                        <i class="bi bi-eye"></i> View
+                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                    <a href="{{ route('company_details.show', $detail->id) }}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View">
+                                        <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('company_details.edit', $detail->id) }}" class="btn btn-warning text-white" title="Edit">
-                                        <i class="bi bi-pencil"></i> Edit
+                                    <a href="{{ route('company_details.edit', $detail->id) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
+                                        <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('company_details.destroy', $detail->id) }}" method="POST"
                                         onsubmit="return confirm('Are you sure you want to delete this company profile?');"
-                                        style="display: inline-block;">
+                                        class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" title="Delete">
-                                            <i class="bi bi-trash"></i> Delete
+                                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>

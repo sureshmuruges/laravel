@@ -16,6 +16,10 @@
                 </div>
             </form>
 
+            <a href="{{ route('bookings.export', ['search' => request('search')]) }}" class="btn btn-outline-success px-4">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
+            </a>
+
             <a href="{{ route('bookings.create') }}" class="btn btn-success px-4">
                 <i class="bi bi-plus-circle me-1"></i> New Booking
             </a>
@@ -81,21 +85,19 @@
                             <td class="py-3">{{ $booking->Destination }}</td>
                             <td class="py-3">{{ $booking->Reference }}</td>
                             <td class="py-3 text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('bookings.show', $booking->Id) }}" class="btn btn-sm btn-primary"
-                                        title="View">
-                                        <i class="bi bi-eye">Show</i>
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <a href="{{ route('bookings.show', $booking->Id) }}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View">
+                                        <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('bookings.edit', $booking->Id) }}"
-                                        class="btn btn-sm btn-warning text-white" title="Edit">
-                                        <i class="bi bi-pencil">Edit</i>
+                                    <a href="{{ route('bookings.edit', $booking->Id) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
+                                        <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('bookings.destroy', $booking->Id) }}" method="POST"
-                                        onsubmit="return confirm('Confirm delete?');" style="display:inline;">
+                                        onsubmit="return confirm('Confirm delete?');" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                            <i class="bi bi-trash">Delete</i>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>

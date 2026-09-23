@@ -33,7 +33,7 @@
                                     data-cgst="{{ $product->cgst }}"
                                     data-sgst="{{ $product->sgst }}"
                                     data-gst="{{ $product->gst }}"
-                                    data-isservice="{{ $product->is_service ? 'Y' : 'N' }}"
+                                    data-isservice="{{ $product->is_service === 'Y' ? 'Y' : 'N' }}"
                                     data-exceptparticulars="{{ $product->except_particulars ? 'Y' : 'N' }}"
                                     {{ (old('Particulars', $invoice_particular->Particulars) == $val) ? 'selected' : '' }}>
                                     {{ $val }}

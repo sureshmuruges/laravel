@@ -14,6 +14,9 @@
             </form>
 
             <div class="d-flex gap-2">
+                <a href="{{ route('addresses.export', ['search' => request('search')]) }}" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
+                </a>
                 <a href="{{ route('addresses.create') }}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-1"></i> Create New Address
                 </a>
@@ -58,7 +61,7 @@
                                 <th class="py-3 px-3"><a href="{{ sortUrl('Id') }}"
                                         class="text-dark text-decoration-none">Id {{ sortIcon('Id') }}</a></th>
                                 <th class="py-3 px-3"><a href="{{ sortUrl('AccountCode') }}"
-                                        class="text-dark text-decoration-none">ACode {{ sortIcon('AccountCode') }}</a></th>
+                                        class="text-dark text-decoration-none">Company Code {{ sortIcon('AccountCode') }}</a></th>
                                 <th class="py-3 px-3"><a href="{{ sortUrl('CompanyName') }}"
                                         class="text-dark text-decoration-none">Company Name
                                         {{ sortIcon('CompanyName') }}</a></th>
@@ -81,22 +84,20 @@
                                     <td class="py-3 px-3">{{ $address->State }}</td>
                                     <td class="py-3 px-3">{{ $address->GSTNo }}</td>
                                     <td class="py-3 px-3">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ route('addresses.show', $address->Id) }}" class="btn btn-info"
-                                                title="View">
-                                                <i class="bi bi-eye">View</i>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a href="{{ route('addresses.show', $address->Id) }}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View">
+                                                <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('addresses.edit', $address->Id) }}"
-                                                class="btn btn-sm btn-warning text-white" title="Edit">
-                                                <i class="bi bi-pencil">Edit</i>
+                                            <a href="{{ route('addresses.edit', $address->Id) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
+                                                <i class="bi bi-pencil"></i>
                                             </a>
                                             <form action="{{ route('addresses.destroy', $address->Id) }}" method="POST"
                                                 onsubmit="return confirm('Are you sure you want to delete this address?');"
-                                                style="display: inline-block;">
+                                                class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                                    <i class="bi bi-trash">Delete</i>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
                                         </div>

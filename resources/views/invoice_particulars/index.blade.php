@@ -2,9 +2,14 @@
 <div class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h3 mb-0 text-gray-800">Invoice Particulars</h2>
-        <a href="{{ route('invoice_particulars.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add New Particular
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('invoice_particulars.export', ['search' => request('search')]) }}" class="btn btn-outline-success">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </a>
+            <a href="{{ route('invoice_particulars.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Particular
+            </a>
+        </div>
     </div>
 
     @if (session('success'))
@@ -35,7 +40,7 @@
                             <th><a href="{{ route('invoice_particulars.index', ['sort' => 'Id', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc', 'search' => request('search')]) }}">ID</a></th>
                             <th><a href="{{ route('invoice_particulars.index', ['sort' => 'BillNo', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc', 'search' => request('search')]) }}">Bill No</a></th>
                             <th><a href="{{ route('invoice_particulars.index', ['sort' => 'Particulars', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc', 'search' => request('search')]) }}">Particulars</a></th>
-                            <th>Tax Amount</th>
+                            <th><a href="{{ route('invoice_particulars.index', ['sort' => 'TaxAmount', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc', 'search' => request('search')]) }}">Tax Amount</a></th>
                             <th><a href="{{ route('invoice_particulars.index', ['sort' => 'Total', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc', 'search' => request('search')]) }}">Total</a></th>
                             <th><a href="{{ route('invoice_particulars.index', ['sort' => 'CreateDate', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc', 'search' => request('search')]) }}">Date</a></th>
                             <th class="text-center" style="width: 150px;">Action</th>
@@ -51,16 +56,18 @@
                             <td>{{ number_format($item->Total, 2) }}</td>
                             <td>{{ $item->CreateDate ? \Carbon\Carbon::parse($item->CreateDate)->format('d/m/Y') : '' }}</td>
                             <td class="text-center">
-                                <a href="{{ route('invoice_particulars.edit', $item->Id) }}" class="btn btn-sm btn-outline-primary me-1">
-                                    <i class="fas fa-edit">Edit</i>
-                                </a>
-                                <form action="{{ route('invoice_particulars.destroy', $item->Id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this particular?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash">Delete</i>
-                                    </button>
-                                </form>
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <a href="{{ route('invoice_particulars.edit', $item->Id) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('invoice_particulars.destroy', $item->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this particular?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @empty

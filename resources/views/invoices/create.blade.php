@@ -240,8 +240,8 @@
                             <input type="text" name="taxsch" id="pkgs" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold">EGM/IGM or Container</label>
-                            <input type="text" name="irn" id="egm_igm" class="form-control">
+                            <label class="form-label fw-semibold">IRN (GST e-Invoice)</label>
+                            <input type="text" name="irn" id="egm_igm" class="form-control" maxlength="64" placeholder="64-character IRN">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">CBM</label>
@@ -323,7 +323,7 @@
                                                 data-igst="{{ $p->igst }}"
                                                 data-cgst="{{ $p->cgst }}"
                                                 data-sgst="{{ $p->sgst }}"
-                                                data-isservice="{{ $p->is_service ? 'Y' : '' }}"
+                                                data-isservice="{{ $p->is_service === 'Y' ? 'Y' : '' }}"
                                                 data-except="{{ $p->except_particulars ? 'Y' : '' }}">
                                             {{ strtoupper($p->particulars) }} ({{ $p->hsn }})
                                         </option>

@@ -1,10 +1,4 @@
 <x-app-layout>
-	<x-slot name="header">
-		<h2 class="h4 font-weight-bold mb-0 text-dark">
-			Particulars
-		</h2>
-	</x-slot>
-
 	<div class="">
 		<!-- Notification Messages -->
 		@if ($message = Session::get('success'))

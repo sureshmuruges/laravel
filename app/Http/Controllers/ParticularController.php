@@ -21,9 +21,19 @@ class ParticularController extends Controller
                   ->orWhere('hsn', 'like', "%{$search}%");
         }
 
-        $particulars = $query->latest()->paginate(50);
-        
-        return view('particulars.index', compact('particulars'))
+        $sortField = $request->input('sort', 'id');
+        $sortDirection = $request->input('direction', 'desc');
+
+        $allowedSorts = ['id', 'particulars', 'hsn', 'gst', 'igst', 'cgst', 'sgst', 'except_particulars', 'is_service', 'active'];
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        $particulars = $query->paginate(50)->withQueryString();
+
+        return view('particulars.index', compact('particulars', 'sortField', 'sortDirection'))
             ->with('i', (request()->input('page', 1) - 1) * 50);
     }
 
@@ -47,19 +57,20 @@ class ParticularController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $request->validate([
-            'particulars' => 'required|string',
-            'hsn' => 'nullable|string',
+        $data = $request->validate([
+            'particulars' => 'required|string|max:150',
+            'hsn' => 'nullable|digits_between:1,10',
             'gst' => 'nullable|numeric',
             'igst' => 'nullable|numeric',
             'cgst' => 'nullable|numeric',
             'sgst' => 'nullable|numeric',
+            'is_service' => 'nullable|in:Y,N',
+            'active' => 'nullable|in:Y,N',
         ]);
-        
-        $data = $request->all();
+
         $data['except_particulars'] = $request->has('except_particulars') ? 1 : 0;
-        $data['is_service'] = $request->has('is_service') ? 1 : 0;
-        $data['active'] = $request->has('active') ? 1 : 0;
+        $data['is_service'] = $data['is_service'] ?? 'Y';
+        $data['active'] = $data['active'] ?? 'Y';
 
         Particular::create($data);
        
@@ -95,19 +106,20 @@ class ParticularController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $request->validate([
-            'particulars' => 'required|string',
-            'hsn' => 'nullable|string',
+        $data = $request->validate([
+            'particulars' => 'required|string|max:150',
+            'hsn' => 'nullable|digits_between:1,10',
             'gst' => 'nullable|numeric',
             'igst' => 'nullable|numeric',
             'cgst' => 'nullable|numeric',
             'sgst' => 'nullable|numeric',
+            'is_service' => 'nullable|in:Y,N',
+            'active' => 'nullable|in:Y,N',
         ]);
-      
-        $data = $request->all();
+
         $data['except_particulars'] = $request->has('except_particulars') ? 1 : 0;
-        $data['is_service'] = $request->has('is_service') ? 1 : 0;
-        $data['active'] = $request->has('active') ? 1 : 0;
+        $data['is_service'] = $data['is_service'] ?? 'Y';
+        $data['active'] = $data['active'] ?? 'Y';
 
         $particular->update($data);
       
@@ -163,8 +175,8 @@ class ParticularController extends Controller
                     $particular->cgst,
                     $particular->sgst,
                     $particular->except_particulars ? 1 : 0,
-                    $particular->is_service ? 1 : 0,
-                    $particular->active ? 1 : 0,
+                    $particular->is_service === 'Y' ? 'Y' : 'N',
+                    $particular->active === 'Y' ? 'Y' : 'N',
                 ]);
             }
             fclose($file);

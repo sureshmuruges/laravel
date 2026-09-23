@@ -31,42 +31,30 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label font-weight-bold">Particulars <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text" name="particulars" value="{{ old('particulars', $particular->particulars) }}" required maxlength="255">
+                                <input class="form-control" type="text" name="particulars" id="particulars" value="{{ old('particulars', $particular->particulars) }}" required maxlength="150">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label font-weight-bold">HSN</label>
-                                <input class="form-control" type="text" name="hsn" value="{{ old('hsn', $particular->hsn) }}" maxlength="255">
+                                <input class="form-control" type="text" name="hsn" id="hsn" value="{{ old('hsn', $particular->hsn) }}" inputmode="numeric" pattern="[0-9]*" maxlength="10">
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <label class="form-label font-weight-bold">GST</label>
-                                <select class="form-select" name="gst">
-                                    <option value="0" {{ old('gst', $particular->gst) == 0 ? 'selected' : '' }}>0.00</option>
-                                    <option value="18" {{ old('gst', $particular->gst) == 18 ? 'selected' : '' }}>18.00</option>
-                                </select>
+                                <input type="text" inputmode="decimal" class="form-control" name="gst" id="gst" value="{{ old('gst', $particular->gst) }}" placeholder="Enter GST %">
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label font-weight-bold">IGST</label>
-                                <select class="form-select" name="igst">
-                                    <option value="0" {{ old('igst', $particular->igst) == 0 ? 'selected' : '' }}>0.00</option>
-                                    <option value="18" {{ old('igst', $particular->igst) == 18 ? 'selected' : '' }}>18.00</option>
-                                </select>
+                                <input type="text" class="form-control" name="igst" id="igst" value="{{ old('igst', $particular->igst) }}" readonly>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label font-weight-bold">CGST</label>
-                                <select class="form-select" name="cgst">
-                                    <option value="0" {{ old('cgst', $particular->cgst) == 0 ? 'selected' : '' }}>0.00</option>
-                                    <option value="9" {{ old('cgst', $particular->cgst) == 9 ? 'selected' : '' }}>9.00</option>
-                                </select>
+                                <input type="text" class="form-control" name="cgst" id="cgst" value="{{ old('cgst', $particular->cgst) }}" readonly>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label font-weight-bold">SGST</label>
-                                <select class="form-select" name="sgst">
-                                    <option value="0" {{ old('sgst', $particular->sgst) == 0 ? 'selected' : '' }}>0.00</option>
-                                    <option value="9" {{ old('sgst', $particular->sgst) == 9 ? 'selected' : '' }}>9.00</option>
-                                </select>
+                                <input type="text" class="form-control" name="sgst" id="sgst" value="{{ old('sgst', $particular->sgst) }}" readonly>
                             </div>
                         </div>
 
@@ -78,16 +66,18 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_service" value="1" id="is_service" {{ old('is_service', $particular->is_service) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_service">IS Service</label>
-                                </div>
+                                <label class="form-label font-weight-bold d-block">IS Service</label>
+                                <select class="form-select" name="is_service">
+                                    <option value="Y" {{ old('is_service', $particular->is_service) == 'Y' ? 'selected' : '' }}>Yes</option>
+                                    <option value="N" {{ old('is_service', $particular->is_service) == 'N' ? 'selected' : '' }}>No</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="active" value="1" id="active" {{ old('active', $particular->active) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="active">Active</label>
-                                </div>
+                                <label class="form-label font-weight-bold d-block">Active</label>
+                                <select class="form-select" name="active">
+                                    <option value="Y" {{ old('active', $particular->active) == 'Y' ? 'selected' : '' }}>Yes</option>
+                                    <option value="N" {{ old('active', $particular->active) == 'N' ? 'selected' : '' }}>No</option>
+                                </select>
                             </div>
                         </div>
 
@@ -97,6 +87,23 @@
                             </button>
                         </div>
                     </form>
+
+                    <script>
+                        document.getElementById('hsn').addEventListener('input', function () {
+                            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                        });
+
+                        function recalcGst() {
+                            const gst = parseFloat(document.getElementById('gst').value) || 0;
+                            document.getElementById('igst').value = gst.toFixed(2);
+                            document.getElementById('cgst').value = (gst / 2).toFixed(2);
+                            document.getElementById('sgst').value = (gst / 2).toFixed(2);
+                        }
+                        document.getElementById('gst').addEventListener('input', recalcGst);
+                        document.getElementById('gst').addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') { e.preventDefault(); recalcGst(); }
+                        });
+                    </script>
                 </div>
             </div>
         </div>

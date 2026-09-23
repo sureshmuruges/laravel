@@ -22,10 +22,21 @@ class CompanyDetail extends Model
         'tan',
         'logo_path',
         'is_active',
+        'company_code_prefix',
+        'company_code_enabled',
+        'pdf_logo_address_layout',
+        'pdf_line_items_rows',
+        'terms_conditions',
+        'irn_qr_enabled',
+        'booking_code_prefix',
+        'tax_invoice_prefix',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'company_code_enabled' => 'boolean',
+        'irn_qr_enabled' => 'boolean',
+        'pdf_line_items_rows' => 'integer',
     ];
 
     /**

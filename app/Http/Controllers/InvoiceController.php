@@ -32,7 +32,7 @@ class InvoiceController extends Controller
         $sortField = $request->input('sort', 'id');
         $sortDirection = $request->input('direction', 'desc');
 
-        $allowedSorts = ['id', 'billno', 'billdate', 'company_name', 'grand_total', 'status'];
+        $allowedSorts = ['id', 'billno', 'billdate', 'company_name', 'booking_no', 'grand_total', 'status'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDirection);
         } else {
@@ -42,6 +42,47 @@ class InvoiceController extends Controller
         $invoices = $query->paginate(20)->withQueryString();
 
         return view('invoices.index', compact('invoices', 'sortField', 'sortDirection'));
+    }
+
+    /**
+     * Export the invoices list as an Excel-compatible CSV file.
+     */
+    public function export(Request $request)
+    {
+        $query = Invoice::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('billno', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%")
+                  ->orWhere('booking_no', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        $invoices = $query->get();
+
+        $columns = ['Id', 'Invoice No', 'Invoice Date', 'Client Name', 'Booking No', 'Grand Total', 'Currency', 'Status'];
+
+        return response()->streamDownload(function () use ($invoices, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($invoices as $invoice) {
+                fputcsv($file, [
+                    $invoice->id,
+                    $invoice->billno,
+                    $invoice->billdate,
+                    $invoice->company_name,
+                    $invoice->booking_no,
+                    $invoice->grand_total,
+                    $invoice->currency,
+                    $invoice->status,
+                ]);
+            }
+            fclose($file);
+        }, 'invoices.csv');
     }
 
     /**
@@ -88,7 +129,7 @@ class InvoiceController extends Controller
             'category' => 'nullable|string|max:100',
             'taxsch' => 'nullable|string|max:100',
             'stype' => 'nullable|string|max:100',
-            'irn' => 'nullable|string|max:200',
+            'irn' => 'nullable|string|max:64',
             'booking_no' => 'nullable|string|max:100',
             'proforma_invoice_no' => 'nullable|string|max:100',
             'proforma_invoice_date' => 'nullable|date',
@@ -254,7 +295,7 @@ class InvoiceController extends Controller
             'category' => 'nullable|string|max:100',
             'taxsch' => 'nullable|string|max:100',
             'stype' => 'nullable|string|max:100',
-            'irn' => 'nullable|string|max:200',
+            'irn' => 'nullable|string|max:64',
             'booking_no' => 'nullable|string|max:100',
             'proforma_invoice_no' => 'nullable|string|max:100',
             'proforma_invoice_date' => 'nullable|date',
@@ -389,27 +430,32 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         $particulars = InvoiceParticular::where('BillNo', $invoice->billno)->get();
-        
+
+        $companyDetail = \App\Models\CompanyDetail::getActive();
+        $showIrnQr = $companyDetail ? (bool) $companyDetail->irn_qr_enabled : true;
+
         // Fetch QR code via cURL to bypass allow_url_fopen limitations on shared hosts
         $qrCodeBase64 = null;
-        try {
-            $qrData = "Invoice No: " . $invoice->billno . "\nGSTIN: 29AHWPT9984H1ZV\nAmount: " . $invoice->grand_total . "\nIRN: " . ($invoice->irn ?? '');
-            $url = "https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=" . urlencode($qrData);
+        if ($showIrnQr) {
+            try {
+                $qrData = "Invoice No: " . $invoice->billno . "\nGSTIN: 29AHWPT9984H1ZV\nAmount: " . $invoice->grand_total . "\nIRN: " . ($invoice->irn ?? '');
+                $url = "https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=" . urlencode($qrData);
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $qrCodeData = curl_exec($ch);
-            curl_close($ch);
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                $qrCodeData = curl_exec($ch);
+                curl_close($ch);
 
-            if ($qrCodeData) {
-                $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrCodeData);
+                if ($qrCodeData) {
+                    $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrCodeData);
+                }
+            } catch (\Exception $e) {
+                $qrCodeBase64 = null;
             }
-        } catch (\Exception $e) {
-            $qrCodeBase64 = null;
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', compact('invoice', 'particulars', 'qrCodeBase64'));

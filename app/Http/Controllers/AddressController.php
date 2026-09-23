@@ -50,6 +50,58 @@ class AddressController extends Controller
         return view('addresses.index', compact('addresses', 'sortField', 'sortDirection'));
     }
 
+    /**
+     * Export the addresses list as an Excel-compatible CSV file.
+     */
+    public function export(Request $request)
+    {
+        $query = Address::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('CompanyName', 'like', '%' . $search . '%')
+                    ->orWhere('AccountCode', 'like', '%' . $search . '%')
+                    ->orWhere('Location', 'like', '%' . $search . '%')
+                    ->orWhere('State', 'like', '%' . $search . '%')
+                    ->orWhere('Country', 'like', '%' . $search . '%')
+                    ->orWhere('GSTNo', 'like', '%' . $search . '%');
+            });
+        }
+
+        $addresses = $query->get();
+
+        $columns = ['Id', 'Type', 'Company Code', 'Company Name', 'Address Line 1', 'Address Line 2', 'Location', 'Pincode', 'State Code', 'State', 'Country', 'GST No', 'PAN', 'Contact Name', 'Phone', 'Email', 'Credit Days'];
+
+        return response()->streamDownload(function () use ($addresses, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($addresses as $address) {
+                fputcsv($file, [
+                    $address->Id,
+                    $address->Type,
+                    $address->AccountCode,
+                    $address->CompanyName,
+                    $address->ALine1,
+                    $address->ALine2,
+                    $address->Location,
+                    $address->Pincode,
+                    $address->StateCode,
+                    $address->State,
+                    $address->Country,
+                    $address->GSTNo,
+                    $address->PAN,
+                    $address->ContactName,
+                    $address->Phone,
+                    $address->Email,
+                    $address->CreditDays,
+                ]);
+            }
+            fclose($file);
+        }, 'addresses.csv');
+    }
+
     public function create()
     {
         // Generate next AccountCode (AO01, AO02, ...)
@@ -165,10 +217,10 @@ class AddressController extends Controller
 
         // 4. Non-India overrides
         if (!$isIndia) {
-            $validatedData['GSTNo'] = 'URP';
+            $validatedData['GSTNo'] = 'URD';
             $validatedData['Pincode'] = '999999';
-            $validatedData['StateCode'] = '96';
-            $validatedData['State'] = 'OTHER THAN INDIA';
+            $validatedData['StateCode'] = '91';
+            $validatedData['State'] = '';
         }
 
         return $validatedData;
@@ -179,18 +231,26 @@ class AddressController extends Controller
     // -------------------------------------------------------------------------
     private function generateNextAccountCode(): string
     {
-        // Get the highest numeric suffix of existing codes starting with 'AO'
-        $last = Address::where('AccountCode', 'like', 'AO%')
-            ->orderByRaw('CAST(SUBSTRING(AccountCode, 3) AS UNSIGNED) DESC')
+        $prefix = 'AO';
+
+        $companyDetail = \App\Models\CompanyDetail::getActive();
+        if ($companyDetail && $companyDetail->company_code_enabled && !empty($companyDetail->company_code_prefix)) {
+            $prefix = $companyDetail->company_code_prefix;
+        }
+
+        // Get the highest numeric suffix of existing codes starting with the prefix
+        $prefixLength = strlen($prefix);
+        $last = Address::where('AccountCode', 'like', $prefix . '%')
+            ->orderByRaw("CAST(SUBSTRING(AccountCode, {$prefixLength} + 1) AS UNSIGNED) DESC")
             ->value('AccountCode');
 
         if ($last) {
-            $num = (int) substr($last, 2); // strip 'AO' prefix
+            $num = (int) substr($last, $prefixLength);
             $next = $num + 1;
         } else {
             $next = 1;
         }
 
-        return 'AO' . str_pad($next, 2, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($next, 2, '0', STR_PAD_LEFT);
     }
 }

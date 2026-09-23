@@ -30,7 +30,7 @@
 								<option value="">-- Select Particular --</option>
 								@foreach ($products as $product)
                                     <option
-                                        value="{{ strtoupper($product->particulars) }}" data-hsn="{{ $product->hsn }}" data-igst="{{ $product->igst }}" data-cgst="{{ $product->cgst }}" data-sgst="{{ $product->sgst }}" data-gst="{{ $product->gst }}" data-isservice="{{ $product->is_service ? 'Y' : 'N' }}" data-exceptparticulars="{{ $product->except_particulars ? 'Y' : 'N' }}" {{ old('Particulars') == strtoupper($product->particulars) ? 'selected' : '' }}>{{ strtoupper($product->particulars) }}
+                                        value="{{ strtoupper($product->particulars) }}" data-hsn="{{ $product->hsn }}" data-igst="{{ $product->igst }}" data-cgst="{{ $product->cgst }}" data-sgst="{{ $product->sgst }}" data-gst="{{ $product->gst }}" data-isservice="{{ $product->is_service === 'Y' ? 'Y' : 'N' }}" data-exceptparticulars="{{ $product->except_particulars ? 'Y' : 'N' }}" {{ old('Particulars') == strtoupper($product->particulars) ? 'selected' : '' }}>{{ strtoupper($product->particulars) }}
                                     </option>
                                 @endforeach
 							</select>

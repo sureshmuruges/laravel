@@ -116,7 +116,9 @@ class Invoice extends Model
     public static function generateInvoiceNumber($dateString = null)
     {
         $fy = self::getFinancialYear($dateString);
-        $prefix = 'CSHL' . $fy; // e.g., CSHL2627
+        $companyDetail = \App\Models\CompanyDetail::getActive();
+        $prefixBase = ($companyDetail && !empty($companyDetail->tax_invoice_prefix)) ? $companyDetail->tax_invoice_prefix : 'CSHL';
+        $prefix = $prefixBase . $fy; // e.g., CSHL2627
 
         // Get all invoice numbers matching this prefix and find the highest serial
         $lastInvoice = self::where('billno', 'LIKE', $prefix . '%')

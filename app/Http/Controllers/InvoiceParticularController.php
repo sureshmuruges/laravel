@@ -23,7 +23,7 @@ class InvoiceParticularController extends Controller
         $sortField = $request->input('sort', 'Id');
         $sortDirection = $request->input('direction', 'desc');
 
-        $allowedSorts = ['Id', 'BillNo', 'ProformaInvoiceNo', 'Particulars', 'Total', 'CreateDate'];
+        $allowedSorts = ['Id', 'BillNo', 'ProformaInvoiceNo', 'Particulars', 'TaxAmount', 'Total', 'CreateDate'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDirection);
         } else {
@@ -33,6 +33,46 @@ class InvoiceParticularController extends Controller
         $particulars = $query->paginate(20)->withQueryString();
 
         return view('invoice_particulars.index', compact('particulars', 'sortField', 'sortDirection'));
+    }
+
+    /**
+     * Export the invoice particulars list as an Excel-compatible CSV file.
+     */
+    public function export(Request $request)
+    {
+        $query = \App\Models\InvoiceParticular::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('BillNo', 'like', "%{$search}%")
+                  ->orWhere('ProformaInvoiceNo', 'like', "%{$search}%")
+                  ->orWhere('Particulars', 'like', "%{$search}%")
+                  ->orWhere('HSN', 'like', "%{$search}%");
+            });
+        }
+
+        $particulars = $query->get();
+
+        $columns = ['Id', 'Bill No', 'Particulars', 'HSN', 'Tax Amount', 'Total', 'Date'];
+
+        return response()->streamDownload(function () use ($particulars, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($particulars as $item) {
+                fputcsv($file, [
+                    $item->Id,
+                    $item->BillNo,
+                    $item->Particulars,
+                    $item->HSN,
+                    $item->TaxAmount,
+                    $item->Total,
+                    $item->CreateDate,
+                ]);
+            }
+            fclose($file);
+        }, 'invoice_particulars.csv');
     }
 
     public function create()

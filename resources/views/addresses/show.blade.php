@@ -14,7 +14,7 @@
                     <div class="col-md-6 mb-3">
                         <h6 class="text-muted text-uppercase small fw-bold mb-2">Basic Info</h6>
                         <div class="p-3 bg-light rounded shadow-sm">
-                            <div class="mb-2"><strong>Account Code:</strong> {{ $address->AccountCode }}</div>
+                            <div class="mb-2"><strong>Company Code:</strong> {{ $address->AccountCode }}</div>
                             <div class="mb-2"><strong>Company Name:</strong> {{ $address->CompanyName }}</div>
                             <div class="mb-2"><strong>User Type:</strong> <span
                                     class="badge bg-secondary text-capitalize">{{ $address->Type }}</span></div>
