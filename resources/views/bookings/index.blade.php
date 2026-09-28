@@ -1,105 +1,122 @@
 @extends('bookings.layout')
 
 @section('content')
-<div class="px-2">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-        <h2 class="h3 font-weight-bold text-dark mb-0">Bookings List</h2>
+    <div class="px-2">
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+            <h2 class="h3 font-weight-bold text-dark mb-0">Bookings List</h2>
 
-        <form action="{{ route('bookings.index') }}" method="GET" class="d-flex align-items-center w-100 w-md-auto">
-            <div class="input-group">
-                <input type="text" name="search" class="form-control" placeholder="Search Bookings..." value="{{ request('search') }}">
-                <button type="submit" class="btn btn-primary px-3">
-                    <i class="bi bi-search">Search</i>
-                </button>
-            </div>
-        </form>
+            <form action="{{ route('bookings.index') }}" method="GET" class="d-flex align-items-center w-100 w-md-auto">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search Bookings..."
+                        value="{{ request('search') }}">
+                    <button type="submit" class="btn btn-primary px-3">
+                        <i class="bi bi-search">Search</i>
+                    </button>
+                </div>
+            </form>
 
-        <a href="{{ route('bookings.create') }}" class="btn btn-success px-4">
-            <i class="bi bi-plus-circle me-1"></i> New Booking
-        </a>
-    </div>
+            <a href="{{ route('bookings.export', ['search' => request('search')]) }}" class="btn btn-outline-success px-4">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
+            </a>
 
-    <div class="table-responsive">
-        @php
-            if (!function_exists('sortIcon')) {
-                function sortIcon($field)
-                {
-                    $sortField = request('sort', 'Id');
-                    $sortDirection = request('direction', 'desc');
-                    if ($sortField === $field) {
-                        return $sortDirection === 'asc' ? ' ↑' : ' ↓';
+            <a href="{{ route('bookings.create') }}" class="btn btn-success px-4">
+                <i class="bi bi-plus-circle me-1"></i> New Booking
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            @php
+                if (!function_exists('sortIcon')) {
+                    function sortIcon($field)
+                    {
+                        $sortField = request('sort', 'Id');
+                        $sortDirection = request('direction', 'desc');
+                        if ($sortField === $field) {
+                            return $sortDirection === 'asc' ? ' ↑' : ' ↓';
+                        }
+                        return '';
                     }
-                    return '';
                 }
-            }
-            if (!function_exists('sortUrl')) {
-                function sortUrl($field)
-                {
-                    $sortField = request('sort', 'Id');
-                    $sortDirection = request('direction', 'desc');
-                    $direction = ($sortField === $field && $sortDirection === 'asc') ? 'desc' : 'asc';
-                    return request()->fullUrlWithQuery(['sort' => $field, 'direction' => $direction]);
+                if (!function_exists('sortUrl')) {
+                    function sortUrl($field)
+                    {
+                        $sortField = request('sort', 'Id');
+                        $sortDirection = request('direction', 'desc');
+                        $direction = ($sortField === $field && $sortDirection === 'asc') ? 'desc' : 'asc';
+                        return request()->fullUrlWithQuery(['sort' => $field, 'direction' => $direction]);
+                    }
                 }
-            }
-        @endphp
+            @endphp
 
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="py-3"><a href="{{ sortUrl('Id') }}" class="text-dark text-decoration-none fw-bold">ID{!! sortIcon('Id') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('BookingNo') }}" class="text-dark text-decoration-none fw-bold">Booking No{!! sortIcon('BookingNo') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('booking_date') }}" class="text-dark text-decoration-none fw-bold">Date{!! sortIcon('booking_date') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('companyname') }}" class="text-dark text-decoration-none fw-bold">Company{!! sortIcon('companyname') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('shipper') }}" class="text-dark text-decoration-none fw-bold">Shipper{!! sortIcon('shipper') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('origin') }}" class="text-dark text-decoration-none fw-bold">Origin{!! sortIcon('origin') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('Destination') }}" class="text-dark text-decoration-none fw-bold">Dest.{!! sortIcon('Destination') !!}</a></th>
-                    <th class="py-3"><a href="{{ sortUrl('Reference') }}" class="text-dark text-decoration-none fw-bold">Ref{!! sortIcon('Reference') !!}</a></th>
-                    <th class="py-3 text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($bookings as $booking)
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <td class="py-3">{{ $booking->Id }}</td>
-                        <td class="py-3 fw-bold text-primary">{{ $booking->BookingNo }}</td>
-                        <td class="py-3">{{ $booking->booking_date }}</td>
-                        <td class="py-3 text-truncate" style="max-width: 150px;">{{ $booking->companyname }}</td>
-                        <td class="py-3 text-truncate" style="max-width: 150px;">{{ $booking->shipper }}</td>
-                        <td class="py-3">{{ $booking->origin }}</td>
-                        <td class="py-3">{{ $booking->Destination }}</td>
-                        <td class="py-3">{{ $booking->Reference }}</td>
-                        <td class="py-3 text-center">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('bookings.show', $booking->Id) }}" class="btn btn-outline-info" title="View">
-                                    <i class="bi bi-eye">Show</i>
-                                </a>
-                                <a href="{{ route('bookings.edit', $booking->Id) }}" class="btn btn-outline-primary" title="Edit">
-                                    <i class="bi bi-pencil">Edit</i>
-                                </a>
-                                <form action="{{ route('bookings.destroy', $booking->Id) }}" method="POST" onsubmit="return confirm('Confirm delete?');" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                        <i class="bi bi-trash">Delete</i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
+                        <th class="py-3"><a href="{{ sortUrl('Id') }}"
+                                class="text-dark text-decoration-none fw-bold">ID{!! sortIcon('Id') !!}</a></th>
+                        <th class="py-3"><a href="{{ sortUrl('BookingNo') }}"
+                                class="text-dark text-decoration-none fw-bold">Booking No{!! sortIcon('BookingNo') !!}</a>
+                        </th>
+                        <th class="py-3"><a href="{{ sortUrl('booking_date') }}"
+                                class="text-dark text-decoration-none fw-bold">Date{!! sortIcon('booking_date') !!}</a></th>
+                        <th class="py-3"><a href="{{ sortUrl('companyname') }}"
+                                class="text-dark text-decoration-none fw-bold">Company{!! sortIcon('companyname') !!}</a>
+                        </th>
+                        <th class="py-3"><a href="{{ sortUrl('shipper') }}"
+                                class="text-dark text-decoration-none fw-bold">Shipper{!! sortIcon('shipper') !!}</a></th>
+                        <th class="py-3"><a href="{{ sortUrl('origin') }}"
+                                class="text-dark text-decoration-none fw-bold">Origin{!! sortIcon('origin') !!}</a></th>
+                        <th class="py-3"><a href="{{ sortUrl('Destination') }}"
+                                class="text-dark text-decoration-none fw-bold">Dest.{!! sortIcon('Destination') !!}</a></th>
+                        <th class="py-3"><a href="{{ sortUrl('Reference') }}"
+                                class="text-dark text-decoration-none fw-bold">Ref{!! sortIcon('Reference') !!}</a></th>
+                        <th class="py-3 text-center">Actions</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="9" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                            No bookings found.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @forelse ($bookings as $booking)
+                        <tr>
+                            <td class="py-3">{{ $booking->Id }}</td>
+                            <td class="py-3 fw-bold text-primary">{{ $booking->BookingNo }}</td>
+                            <td class="py-3">{{ $booking->booking_date }}</td>
+                            <td class="py-3 text-truncate" style="max-width: 150px;">{{ $booking->companyname }}</td>
+                            <td class="py-3 text-truncate" style="max-width: 150px;">{{ $booking->shipper }}</td>
+                            <td class="py-3">{{ $booking->origin }}</td>
+                            <td class="py-3">{{ $booking->Destination }}</td>
+                            <td class="py-3">{{ $booking->Reference }}</td>
+                            <td class="py-3 text-center">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <a href="{{ route('bookings.show', $booking->Id) }}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('bookings.edit', $booking->Id) }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('bookings.destroy', $booking->Id) }}" method="POST"
+                                        onsubmit="return confirm('Confirm delete?');" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                No bookings found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <div class="mt-4">
-        {{ $bookings->links() }}
+        <div class="mt-4">
+            {{ $bookings->links() }}
+        </div>
     </div>
-</div>
 @endsection

@@ -22,7 +22,7 @@
 				</li>
 				<li class="nav-item">
 					<a
-						class="nav-link {{ request()->routeIs('products.index') ? 'active fw-bold' : '' }}" href="{{ route('products.index') }}">{{ __('Particulars') }}
+						class="nav-link {{ request()->routeIs('particulars.index') ? 'active fw-bold' : '' }}" href="{{ route('particulars.index') }}">{{ __('Particulars') }}
 					</a>
 				</li>
 				<li class="nav-item">
@@ -38,6 +38,21 @@
 				<li class="nav-item">
 					<a
 						class="nav-link {{ request()->routeIs('expenses.*') ? 'active fw-bold' : '' }}" href="{{ route('expenses.index') }}">{{ __('Expenses') }}
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						class="nav-link {{ request()->routeIs('invoice_particulars.*') ? 'active fw-bold' : '' }}" href="{{ route('invoice_particulars.index') }}">{{ __('Invoice Particulars') }}
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						class="nav-link {{ request()->routeIs('invoices.*') ? 'active fw-bold' : '' }}" href="{{ route('invoices.index') }}">{{ __('Tax Invoices') }}
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						class="nav-link {{ request()->routeIs('company_details.*') ? 'active fw-bold' : '' }}" href="{{ route('company_details.index') }}">{{ __('Company Details') }}
 					</a>
 				</li>
 			</ul>

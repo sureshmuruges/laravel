@@ -28,4 +28,9 @@ class Expense extends Model
         'Total',
         'Month'
     ];
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class, 'JobNo', 'BookingNo');
+    }
 }

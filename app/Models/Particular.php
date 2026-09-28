@@ -4,10 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+class Particular extends Model
 {
     protected $fillable = [
-        'c_code',
         'particulars',
         'hsn',
         'gst',

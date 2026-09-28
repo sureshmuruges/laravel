@@ -63,4 +63,9 @@ class Booking extends Model
      * Logic for BookingNo: Start current year 2026+1 + auto-increment.
      * So 2027XXXX format.
      */
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class, 'JobNo', 'BookingNo');
+    }
 }

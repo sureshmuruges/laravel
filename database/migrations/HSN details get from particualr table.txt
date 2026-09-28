@@ -1,0 +1,7 @@
+HSN details get from particualr table
+Get the code form automtically shown in dropdown
+
+Is Service make check box 
+For the GST section no need drop down list it is text box only 
+Enter number with decimal only valudation required 
+Exceptional Particulars make check box

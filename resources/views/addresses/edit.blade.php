@@ -21,7 +21,7 @@
                 @csrf
                 @method('PUT')
 
-                {{-- Row 1: Type | Account Code --}}
+                {{-- Row 1: Type | Company Code --}}
                 <div class="row mb-3">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label for="Type" class="form-label fw-bold">User Type</label>
@@ -29,11 +29,13 @@
                             <option value="client" {{ old('Type', $address->Type) == 'client' ? 'selected' : '' }}>Client</option>
                             <option value="vendor" {{ old('Type', $address->Type) == 'vendor' ? 'selected' : '' }}>Vendor</option>
                             <option value="both"   {{ old('Type', $address->Type) == 'both'   ? 'selected' : '' }}>Both</option>
+                            <option value="shipper" {{ old('Type', $address->Type) == 'shipper' ? 'selected' : '' }}>Shipper</option>
+                            <option value="consignee" {{ old('Type', $address->Type) == 'consignee' ? 'selected' : '' }}>Consignee</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="AccountCode" class="form-label fw-bold">
-                            Account Code (AO) <span class="text-danger">*</span>
+                            Company Code <span class="text-danger">*</span>
                         </label>
                         <input type="text"
                                class="form-control"
@@ -117,20 +119,20 @@
                                class="form-control"
                                id="Pincode"
                                name="Pincode"
+                               inputmode="numeric"
                                value="{{ old('Pincode', $address->Pincode) }}">
                         <small id="PincodeHelp" class="text-muted"></small>
                     </div>
                 </div>
 
-                {{-- State row (India only) --}}
-                <div class="row mb-3" id="stateRow" style="display: none;">
+                {{-- State row --}}
+                <div class="row mb-3" id="stateRow">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label for="ddl_StateName" class="form-label fw-bold">
-                            State <span class="text-danger">*</span>
+                            State <span id="StateStar" class="text-danger">*</span>
                         </label>
                         <select name="ddl_StateName" id="ddl_StateName" class="form-select form-control">
                             <option value="">---Select State---</option>
-                            <option value="96">OTHER THAN INDIA</option>
                             <option value="99">CENTRE JURISDICTION</option>
                             <option value="97">OTHER TERRITORY</option>
                             <option value="35">ANDAMAN AND NICOBAR ISLANDS</option>
@@ -172,8 +174,12 @@
                             <option value="05">UTTARAKHAND</option>
                             <option value="19">WEST BENGAL</option>
                         </select>
-                        <input type="hidden" id="State"     name="State"     value="{{ old('State', $address->State) }}">
-                        <input type="hidden" id="StateCode" name="StateCode" value="{{ old('StateCode', $address->StateCode) }}">
+                        <input type="hidden" id="State" name="State" value="{{ old('State', $address->State) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="StateCode" class="form-label fw-bold">State Code</label>
+                        <input type="text" class="form-control" id="StateCode" name="StateCode"
+                               value="{{ old('StateCode', $address->StateCode) }}" readonly>
                     </div>
                 </div>
 
@@ -231,135 +237,130 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    function updateState() {
-        var selectedVal  = $('#ddl_StateName').val();
-        var selectedText = $('#ddl_StateName option:selected').text();
+    (function () {
+        var stateSelect = document.getElementById('ddl_StateName');
+        var stateHidden = document.getElementById('State');
+        var stateCodeInput = document.getElementById('StateCode');
+        var countrySelect = document.getElementById('Country');
+        var pincodeInput = document.getElementById('Pincode');
+        var gstInput = document.getElementById('GSTNo');
 
-        if (selectedVal) {
-            $('#StateCode').val(selectedVal);
-            $('#State').val(selectedText);
-        } else {
-            $('#StateCode').val('');
-            $('#State').val('');
-        }
-    }
-
-    function handleCountryChange() {
-        var country = $('#Country').val();
-
-        if (country === 'India') {
-            $('#stateRow').css('display', 'flex');
-            $('#ddl_StateName').prop('required', true);
-
-            $('#ALine1').prop({ required: true, maxlength: 100 });
-            $('#ALine1Star').show();
-            $('#ALine1Help').text('Required (max 100 characters)');
-
-            $('#ALine2').prop({ required: true, maxlength: 100 });
-            $('#ALine2Star').show();
-            $('#ALine2Help').text('Required (max 100 characters)');
-
-            $('#Location').prop('required', true);
-            $('#LocationStar').show();
-
-            var currentPincode = $('#Pincode').val();
-            $('#Pincode').prop({
-                required:  true,
-                readonly:  false,
-                maxlength: 6,
-                minlength: 6
-            }).val(currentPincode === '999999' ? '' : currentPincode);
-            $('#PincodeStar').show();
-            $('#PincodeHelp').text('6 digits mandatory');
-
-            $('#GSTNoLabel').html('GST No <span class="text-danger">*</span>');
-            if ($('#GSTNo').val() === 'URP') { $('#GSTNo').val(''); }
-            $('#GSTNo').prop({
-                readonly:  false,
-                required:  true,
-                maxlength: 16,
-                minlength: 16
-            });
-            $('#GSTNoHelp').text('Exactly 16 characters required');
-
-        } else if (country !== '') {
-            $('#stateRow').hide();
-            $('#ddl_StateName').prop('required', false).val('');
-            $('#StateCode').val('96');
-            $('#State').val('OTHER THAN INDIA');
-
-            $('#ALine1').prop({ required: false, maxlength: 60 });
-            $('#ALine1Star').hide();
-            $('#ALine1Help').text('Optional (max 60 characters)');
-
-            $('#ALine2').prop({ required: false, maxlength: 60 });
-            $('#ALine2Star').hide();
-            $('#ALine2Help').text('Optional (max 60 characters)');
-
-            $('#Location').prop('required', false);
-            $('#LocationStar').hide();
-
-            $('#Pincode')
-                .val('999999')
-                .prop({ readonly: true, required: false })
-                .removeAttr('minlength maxlength');
-            $('#PincodeStar').hide();
-            $('#PincodeHelp').text('Default 999999 (non-editable for non-India)');
-
-            $('#GSTNoLabel').text('GST No');
-            $('#GSTNo')
-                .val('URP')
-                .prop({ readonly: true, required: false })
-                .removeAttr('minlength maxlength');
-            $('#GSTNoHelp').text('Defaults to URP for non-India');
-
-        } else {
-            $('#stateRow').hide();
-            $('#ddl_StateName').prop('required', false);
-
-            $('#ALine1').prop({ required: false, maxlength: 100 });
-            $('#ALine1Star').show();
-            $('#ALine1Help').text('');
-
-            $('#ALine2').prop({ required: false, maxlength: 100 });
-            $('#ALine2Star').show();
-            $('#ALine2Help').text('');
-
-            $('#Location').prop('required', false);
-            $('#LocationStar').show();
-
-            $('#Pincode')
-                .val('')
-                .prop({ readonly: false, required: false })
-                .removeAttr('minlength maxlength');
-            $('#PincodeStar').show();
-            $('#PincodeHelp').text('');
-
-            $('#GSTNoLabel').text('GST No');
-            $('#GSTNo')
-                .prop({ readonly: false, required: false })
-                .removeAttr('minlength maxlength');
-            $('#GSTNoHelp').text('');
-        }
-    }
-
-    $(document).ready(function () {
-        var stateVal = $('#StateCode').val();
-        if (stateVal) {
-            $('#ddl_StateName').val(stateVal);
+        function updateState() {
+            var opt = stateSelect.options[stateSelect.selectedIndex];
+            if (stateSelect.value) {
+                stateCodeInput.value = stateSelect.value;
+                stateHidden.value = opt.text;
+            } else {
+                stateCodeInput.value = '';
+                stateHidden.value = '';
+            }
         }
 
+        function handleCountryChange() {
+            var country = countrySelect.value;
+            var aline1 = document.getElementById('ALine1');
+            var aline2 = document.getElementById('ALine2');
+            var location = document.getElementById('Location');
+
+            if (country === 'India') {
+                stateSelect.disabled = false;
+                stateSelect.required = true;
+                document.getElementById('StateStar').style.display = '';
+                stateCodeInput.readOnly = true;
+
+                aline1.required = true;
+                aline1.maxLength = 100;
+                document.getElementById('ALine1Star').style.display = '';
+                document.getElementById('ALine1Help').textContent = 'Required (max 100 characters)';
+
+                aline2.required = true;
+                aline2.maxLength = 100;
+                document.getElementById('ALine2Star').style.display = '';
+                document.getElementById('ALine2Help').textContent = 'Required (max 100 characters)';
+
+                location.required = true;
+                document.getElementById('LocationStar').style.display = '';
+
+                if (pincodeInput.value === '999999') pincodeInput.value = '';
+                pincodeInput.required = true;
+                pincodeInput.readOnly = false;
+                pincodeInput.maxLength = 6;
+                document.getElementById('PincodeStar').style.display = '';
+                document.getElementById('PincodeHelp').textContent = '6 digits mandatory';
+
+                document.getElementById('GSTNoLabel').innerHTML = 'GST No <span class="text-danger">*</span>';
+                if (gstInput.value === 'URD') gstInput.value = '';
+                gstInput.readOnly = false;
+                gstInput.required = true;
+                gstInput.maxLength = 16;
+                document.getElementById('GSTNoHelp').textContent = 'Exactly 16 characters required';
+            } else if (country !== '') {
+                stateSelect.disabled = true;
+                stateSelect.required = false;
+                stateSelect.value = '';
+                document.getElementById('StateStar').style.display = 'none';
+                stateHidden.value = '';
+                stateCodeInput.value = '91';
+                stateCodeInput.readOnly = true;
+
+                aline1.required = false;
+                aline1.maxLength = 60;
+                document.getElementById('ALine1Star').style.display = 'none';
+                document.getElementById('ALine1Help').textContent = 'Optional (max 60 characters)';
+
+                aline2.required = false;
+                aline2.maxLength = 60;
+                document.getElementById('ALine2Star').style.display = 'none';
+                document.getElementById('ALine2Help').textContent = 'Optional (max 60 characters)';
+
+                location.required = false;
+                document.getElementById('LocationStar').style.display = 'none';
+
+                pincodeInput.value = '999999';
+                pincodeInput.readOnly = true;
+                pincodeInput.required = false;
+                document.getElementById('PincodeStar').style.display = 'none';
+                document.getElementById('PincodeHelp').textContent = 'Default 999999 (non-editable for non-India)';
+
+                document.getElementById('GSTNoLabel').textContent = 'GST No';
+                gstInput.value = 'URD';
+                gstInput.readOnly = true;
+                gstInput.required = false;
+                document.getElementById('GSTNoHelp').textContent = 'Defaults to URD for non-India';
+            } else {
+                stateSelect.disabled = false;
+                stateSelect.required = false;
+                stateCodeInput.readOnly = true;
+
+                aline1.required = false;
+                document.getElementById('ALine1Help').textContent = '';
+                aline2.required = false;
+                document.getElementById('ALine2Help').textContent = '';
+                location.required = false;
+
+                pincodeInput.readOnly = false;
+                pincodeInput.required = false;
+                document.getElementById('PincodeHelp').textContent = '';
+
+                gstInput.readOnly = false;
+                gstInput.required = false;
+                document.getElementById('GSTNoHelp').textContent = '';
+            }
+        }
+
+        pincodeInput.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+
+        stateSelect.addEventListener('change', updateState);
+        countrySelect.addEventListener('change', handleCountryChange);
+
+        // Elements above this script already exist in the DOM, so initialize immediately.
+        if (stateCodeInput.value) {
+            stateSelect.value = stateCodeInput.value;
+        }
         handleCountryChange();
-
-        $('#Country').on('change', function () {
-            handleCountryChange();
-        });
-
-        $('#ddl_StateName').on('change', function () {
-            updateState();
-        });
-    });
+    })();
 </script>
 @endsection

@@ -206,3 +206,8 @@ php artisan queue:restart
 
 php artisan optimize
 php artisan optimize:clear
+
+vendor follder issue server  
+Run command local
+composer install --no-dev --optimize-autoloader
+and zip the vendor floder move to hosting

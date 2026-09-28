@@ -56,12 +56,68 @@ class BookingController extends Controller
     }
 
     /**
+     * Export the bookings list as an Excel-compatible CSV file.
+     */
+    public function export(Request $request)
+    {
+        $query = Booking::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('BookingNo', 'like', '%' . $search . '%')
+                    ->orWhere('companyname', 'like', '%' . $search . '%')
+                    ->orWhere('shipper', 'like', '%' . $search . '%')
+                    ->orWhere('origin', 'like', '%' . $search . '%')
+                    ->orWhere('Destination', 'like', '%' . $search . '%')
+                    ->orWhere('MAWB_MBL', 'like', '%' . $search . '%')
+                    ->orWhere('HAWB_HBL', 'like', '%' . $search . '%')
+                    ->orWhere('Consignee', 'like', '%' . $search . '%')
+                    ->orWhere('accode_companyname', 'like', '%' . $search . '%')
+                    ->orWhere('acode_Shipper', 'like', '%' . $search . '%')
+                    ->orWhere('accode_consignee', 'like', '%' . $search . '%')
+                    ->orWhere('Vessel', 'like', '%' . $search . '%')
+                    ->orWhere('Reference', 'like', '%' . $search . '%');
+            });
+        }
+
+        $bookings = $query->get();
+
+        $columns = ['Id', 'Booking No', 'Category', 'Booking Date', 'Company', 'Shipper', 'Consignee', 'Origin', 'Destination', 'MAWB/MBL', 'HAWB/HBL', 'Reference', 'Active'];
+
+        return response()->streamDownload(function () use ($bookings, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($bookings as $booking) {
+                fputcsv($file, [
+                    $booking->Id,
+                    $booking->BookingNo,
+                    $booking->Category,
+                    $booking->booking_date,
+                    $booking->companyname,
+                    $booking->shipper,
+                    $booking->Consignee,
+                    $booking->origin,
+                    $booking->Destination,
+                    $booking->MAWB_MBL,
+                    $booking->HAWB_HBL,
+                    $booking->Reference,
+                    $booking->Active ? 'Yes' : 'No',
+                ]);
+            }
+            fclose($file);
+        }, 'bookings.csv');
+    }
+
+    /**
      * Show the form for creating a new booking.
      */
     public function create()
     {
         $nextBookingNo = $this->generateNextBookingNo();
-        return view('bookings.create', compact('nextBookingNo'));
+        $addresses = \App\Models\Address::orderBy('CompanyName')->get(['Id', 'CompanyName', 'AccountCode']);
+        return view('bookings.create', compact('nextBookingNo', 'addresses'));
     }
 
     /**
@@ -131,6 +187,7 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
+        $booking->load('expenses');
         return view('bookings.show', compact('booking'));
     }
 
@@ -139,7 +196,8 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        return view('bookings.edit', compact('booking'));
+        $addresses = \App\Models\Address::orderBy('CompanyName')->get(['Id', 'CompanyName', 'AccountCode']);
+        return view('bookings.edit', compact('booking', 'addresses'));
     }
 
     /**
@@ -209,17 +267,20 @@ class BookingController extends Controller
      */
     private function generateNextBookingNo(): string
     {
-        $year = 2026 + 1; // 2027
-        $prefix = (string) $year;
+        $companyDetail = \App\Models\CompanyDetail::getActive();
+        $prefix = ($companyDetail && !empty($companyDetail->booking_code_prefix))
+            ? $companyDetail->booking_code_prefix
+            : (string) (2026 + 1); // Default: year-based, e.g. 2027
 
-        // Get the latest booking number starting with 2027
+        $prefixLength = strlen($prefix);
+
+        // Get the latest booking number starting with the prefix
         $lastBooking = Booking::where('BookingNo', 'like', $prefix . '%')
             ->orderBy('BookingNo', 'desc')
             ->first();
 
         if ($lastBooking) {
-            // Assume format like 20270001
-            $lastNum = (int) substr($lastBooking->BookingNo, 4);
+            $lastNum = (int) substr($lastBooking->BookingNo, $prefixLength);
             $nextNum = $lastNum + 1;
         } else {
             $nextNum = 1;

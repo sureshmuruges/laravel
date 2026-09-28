@@ -37,7 +37,7 @@
                 <select name="JobNo" id="JobNo" class="form-select shadow-sm" required>
                     <option value="">Select Job No</option>
                     @foreach($bookings as $bookingNo)
-                        <option value="{{ $bookingNo }}">{{ $bookingNo }}</option>
+                        <option value="{{ $bookingNo }}" {{ request('JobNo') == $bookingNo ? 'selected' : '' }}>{{ $bookingNo }}</option>
                     @endforeach
                 </select>
             </div>

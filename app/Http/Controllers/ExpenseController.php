@@ -30,7 +30,7 @@ class ExpenseController extends Controller
         $sortField = $request->input('sort', 'id');
         $sortDirection = $request->input('direction', 'desc');
 
-        $allowedSorts = ['id', 'JobNo', 'Date', 'CompanyName', 'Total', 'Currency'];
+        $allowedSorts = ['id', 'JobNo', 'Date', 'CompanyName', 'Total', 'Currency', 'Reference'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDirection);
         } else {
@@ -40,6 +40,49 @@ class ExpenseController extends Controller
         $expenses = $query->paginate(20)->withQueryString();
 
         return view('expenses.index', compact('expenses', 'sortField', 'sortDirection'));
+    }
+
+    /**
+     * Export the expenses list as an Excel-compatible CSV file.
+     */
+    public function export(Request $request)
+    {
+        $query = Expense::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('JobNo', 'like', "%{$search}%")
+                  ->orWhere('Reference', 'like', "%{$search}%")
+                  ->orWhere('Description', 'like', "%{$search}%")
+                  ->orWhere('CompanyName', 'like', "%{$search}%")
+                  ->orWhere('MAWB_MBL', 'like', "%{$search}%");
+            });
+        }
+
+        $expenses = $query->get();
+
+        $columns = ['Id', 'Job No', 'Date', 'Reference', 'Description', 'Company Name', 'MAWB/MBL', 'Currency', 'Total'];
+
+        return response()->streamDownload(function () use ($expenses, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($expenses as $expense) {
+                fputcsv($file, [
+                    $expense->id,
+                    $expense->JobNo,
+                    $expense->Date,
+                    $expense->Reference,
+                    $expense->Description,
+                    $expense->CompanyName,
+                    $expense->MAWB_MBL,
+                    $expense->Currency,
+                    $expense->Total,
+                ]);
+            }
+            fclose($file);
+        }, 'expenses.csv');
     }
 
     /**

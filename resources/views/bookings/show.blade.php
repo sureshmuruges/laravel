@@ -103,5 +103,69 @@
             </div>
         </div>
     </div>
+    
+    <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-dark mb-0">Record of Expenses</h4>
+            <a href="{{ route('expenses.create', ['JobNo' => $booking->BookingNo]) }}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-circle me-1"></i> Add Expense
+            </a>
+        </div>
+        
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-3">Date</th>
+                            <th class="py-3">Category</th>
+                            <th class="py-3">CompanyName</th>
+                            <th class="py-3">Description</th>
+                            <th class="py-3">Total</th>
+                            <th class="py-3">Curr.</th>
+                            <th class="py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($booking->expenses as $expense)
+                            <tr>
+                                <td class="py-3">{{ $expense->Date ? \Carbon\Carbon::parse($expense->Date)->format('d-m-Y') : 'N/A' }}</td>
+                                <td class="py-3"><span class="badge bg-soft-primary text-primary border border-primary">{{ $expense->Category }}</span></td>
+                                <td class="py-3">{{ $expense->CompanyName }}</td>
+                                <td class="py-3 small text-muted">{{ Str::limit($expense->Description, 50) }}</td>
+                                <td class="py-3 fw-bold text-danger">{{ number_format($expense->Total, 2) }}</td>
+                                <td class="py-3 small text-uppercase">{{ $expense->Currency }}</td>
+                                <td class="py-3">
+                                    <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-link text-info p-0 me-2" title="View Detail">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('expenses.edit', $expense->id) }}" class="btn btn-sm btn-link text-primary p-0" title="Edit Expense">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted small">
+                                    No expenses recorded for this job.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                    @if($booking->expenses->count() > 0)
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="4" class="text-end py-3">Total Job Expenses:</th>
+                                <th class="py-3 text-danger fw-bold" colspan="3">
+                                    {{ number_format($booking->expenses->sum('Total'), 2) }}
+                                    <span class="small fw-normal ms-1">{{ $booking->expenses->first()->Currency ?? 'INR' }}</span>
+                                </th>
+                            </tr>
+                        </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
