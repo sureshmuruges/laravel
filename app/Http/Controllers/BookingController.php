@@ -38,17 +38,18 @@ class BookingController extends Controller
 
         // Sorting
         $sortField = $request->input('sort', 'Id');
-        $sortDirection = $request->input('direction', 'desc');
+        $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
 
         $allowedSorts = [
             'Id', 'BookingNo', 'booking_date', 'companyname', 'shipper', 
             'origin', 'Destination', 'MAWB_MBL', 'HAWB_HBL', 'Consignee', 
-            'ETD', 'ETA', 'Pieces'
+            'ETD', 'ETA', 'Pieces', 'Reference'
         ];
 
-        if (in_array($sortField, $allowedSorts)) {
-            $query->orderBy($sortField, $sortDirection);
+        if (!in_array($sortField, $allowedSorts)) {
+            $sortField = 'Id';
         }
+        $query->orderBy($sortField, $sortDirection);
 
         $bookings = $query->paginate(15)->withQueryString();
 

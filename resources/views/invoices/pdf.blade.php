@@ -543,47 +543,48 @@ if (!function_exists('numberToWords')) {
                 </div>
 
                 <!-- Bank & UPI Grid -->
+                @if($bankDetail)
+                @php
+                    $bankRows = array_filter([
+                        'A/c Name:' => $bankDetail->account_name,
+                        'A/c No:' => $bankDetail->account_number,
+                        'Bank Name:' => $bankDetail->bank_name,
+                        'IFSC:' => $bankDetail->ifsc,
+                        'Swift:' => $bankDetail->swift,
+                        'Branch:' => $bankDetail->branch,
+                        'UPI:' => $bankDetail->upi_id,
+                    ]);
+                    $boldValues = ['A/c No:', 'IFSC:', 'UPI:'];
+                    $bankQrPath = $bankDetail->upi_qr_path && file_exists(public_path($bankDetail->upi_qr_path))
+                        ? public_path($bankDetail->upi_qr_path)
+                        : null;
+                @endphp
                 <table class="payment-qr-table">
                     <tr>
-                        <td style="width: 65%; padding: 0;">
+                        <td style="width: {{ $bankQrPath ? '65%' : '100%' }}; padding: 0;">
                             <div class="bank-details-box">
                                 <div class="fw-bold" style="font-size: 9px; border-bottom: 1px solid #000000; padding-bottom: 2px; margin-bottom: 4px;">
                                     Our Bank Details:
                                 </div>
                                 <table class="bank-details-table">
-                                    <tr>
-                                        <td class="fw-bold" style="width: 45px;">A/c No:</td>
-                                        <td class="fw-bold">6450907494</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Bank Name:</td>
-                                        <td>Kotak Mahindra Bank</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">IFSC:</td>
-                                        <td class="fw-bold">KKBK0008045</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Swift:</td>
-                                        <td>KKBKINBBCPC</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">Branch:</td>
-                                        <td>Sahakara Nagar, Bengaluru - 560092</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">UPI:</td>
-                                        <td class="fw-bold">9611570671@kotak</td>
-                                    </tr>
+                                    @foreach($bankRows as $label => $value)
+                                        <tr>
+                                            <td class="fw-bold" @if($loop->first) style="width: 45px;" @endif>{{ $label }}</td>
+                                            <td @if(in_array($label, $boldValues)) class="fw-bold" @endif>{{ $value }}</td>
+                                        </tr>
+                                    @endforeach
                                 </table>
                             </div>
                         </td>
+                        @if($bankQrPath)
                         <td style="width: 35%; padding: 0 0 0 10px; text-align: center; vertical-align: middle;">
                             <div class="fw-bold" style="font-size: 8px; margin-bottom: 2px;">Scan to Pay</div>
-                            <img class="payment-qr-img" src="{{ public_path('images/upi_qr.png') }}" alt="UPI QR Code" />
+                            <img class="payment-qr-img" src="{{ $bankQrPath }}" alt="UPI QR Code" />
                         </td>
+                        @endif
                     </tr>
                 </table>
+                @endif
             </td>
 
             <!-- Right Column: Computations & Signatory -->

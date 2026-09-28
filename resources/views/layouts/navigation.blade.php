@@ -55,6 +55,11 @@
 						class="nav-link {{ request()->routeIs('company_details.*') ? 'active fw-bold' : '' }}" href="{{ route('company_details.index') }}">{{ __('Company Details') }}
 					</a>
 				</li>
+				<li class="nav-item">
+					<a
+						class="nav-link {{ request()->routeIs('bank_details.*') ? 'active fw-bold' : '' }}" href="{{ route('bank_details.index') }}">{{ __('Bank Details') }}
+					</a>
+				</li>
 			</ul>
 
 			<!-- Right Side Of Navbar -->

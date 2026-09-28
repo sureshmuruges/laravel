@@ -7,10 +7,6 @@
                 <p class="text-muted mb-0">Manage your company's tax invoices, proformas, and client billing records.</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('invoices.export', ['search' => request('search')]) }}" class="btn btn-outline-success px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
-                    <i class="fas fa-file-excel"></i>
-                    Export to Excel
-                </a>
                 <a href="{{ route('invoices.create') }}" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
                     <i class="fas fa-plus"></i>
                     Create Tax Invoice
@@ -25,6 +21,17 @@
                     <i class="fas fa-check-circle fs-5"></i>
                     <div>{{ session('success') }}</div>
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -45,6 +52,27 @@
                         <button type="submit" class="btn btn-secondary fw-semibold">
                             <i class="fas fa-filter me-1"></i> Filter
                         </button>
+                    </div>
+                </form>
+
+                <!-- Excel Export by Invoice Date Range -->
+                <form action="{{ route('invoices.export') }}" method="GET" id="invoiceExportForm" class="row g-2 align-items-end border-top pt-3 mt-3">
+                    <input type="hidden" name="search" value="{{ request('search') }}">
+                    <div class="col-md-3">
+                        <label for="export_from_date" class="form-label fw-semibold small text-muted mb-1">From Invoice Date</label>
+                        <input type="date" name="from_date" id="export_from_date" class="form-control" value="{{ old('from_date', request('from_date')) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="export_to_date" class="form-label fw-semibold small text-muted mb-1">To Invoice Date</label>
+                        <input type="date" name="to_date" id="export_to_date" class="form-control" value="{{ old('to_date', request('to_date')) }}">
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-outline-success fw-semibold d-inline-flex align-items-center justify-content-center gap-2">
+                            <i class="fas fa-file-excel"></i> Export to Excel
+                        </button>
+                    </div>
+                    <div class="col-md-3 small text-muted">
+                        Leave both dates empty to export all invoices{{ request('search') ? ' matching the current search' : '' }}.
                     </div>
                 </form>
             </div>
@@ -173,4 +201,14 @@
             @endif
         </div>
     </div>
+    <script>
+        // Keep the export range valid: "To" can't be earlier than "From".
+        (function () {
+            const fromDate = document.getElementById('export_from_date');
+            const toDate = document.getElementById('export_to_date');
+            const syncMin = () => { toDate.min = fromDate.value || ''; };
+            fromDate.addEventListener('change', syncMin);
+            syncMin();
+        })();
+    </script>
 </x-app-layout>

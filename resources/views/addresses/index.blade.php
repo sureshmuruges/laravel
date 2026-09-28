@@ -33,44 +33,15 @@
         <div class="card shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    @php
-                        if (!function_exists('sortIcon')) {
-                            function sortIcon($field)
-                            {
-                                $sortField = request('sort', 'Id');
-                                $sortDirection = request('direction', 'desc');
-                                if ($sortField === $field) {
-                                    return $sortDirection === 'asc' ? '↑' : '↓';
-                                }
-                                return '';
-                            }
-                        }
-                        if (!function_exists('sortUrl')) {
-                            function sortUrl($field)
-                            {
-                                $sortField = request('sort', 'Id');
-                                $sortDirection = request('direction', 'desc');
-                                $direction = ($sortField === $field && $sortDirection === 'asc') ? 'desc' : 'asc';
-                                return request()->fullUrlWithQuery(['sort' => $field, 'direction' => $direction]);
-                            }
-                        }
-                    @endphp
                     <table class="table table-striped table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="py-3 px-3"><a href="{{ sortUrl('Id') }}"
-                                        class="text-dark text-decoration-none">Id {{ sortIcon('Id') }}</a></th>
-                                <th class="py-3 px-3"><a href="{{ sortUrl('AccountCode') }}"
-                                        class="text-dark text-decoration-none">Company Code {{ sortIcon('AccountCode') }}</a></th>
-                                <th class="py-3 px-3"><a href="{{ sortUrl('CompanyName') }}"
-                                        class="text-dark text-decoration-none">Company Name
-                                        {{ sortIcon('CompanyName') }}</a></th>
-                                <th class="py-3 px-3"><a href="{{ sortUrl('Country') }}"
-                                        class="text-dark text-decoration-none">Country {{ sortIcon('Country') }}</a></th>
-                                <th class="py-3 px-3"><a href="{{ sortUrl('State') }}"
-                                        class="text-dark text-decoration-none">State {{ sortIcon('State') }}</a></th>
-                                <th class="py-3 px-3"><a href="{{ sortUrl('GSTNo') }}"
-                                        class="text-dark text-decoration-none">GST No {{ sortIcon('GSTNo') }}</a></th>
+                                <th class="py-3 px-3"><x-sort-link field="Id" default="Id">Id</x-sort-link></th>
+                                <th class="py-3 px-3"><x-sort-link field="AccountCode" default="Id">Company Code</x-sort-link></th>
+                                <th class="py-3 px-3"><x-sort-link field="CompanyName" default="Id">Company Name</x-sort-link></th>
+                                <th class="py-3 px-3"><x-sort-link field="Country" default="Id">Country</x-sort-link></th>
+                                <th class="py-3 px-3"><x-sort-link field="State" default="Id">State</x-sort-link></th>
+                                <th class="py-3 px-3"><x-sort-link field="GSTNo" default="Id">GST No</x-sort-link></th>
                                 <th class="py-3 px-3">Actions</th>
                             </tr>
                         </thead>

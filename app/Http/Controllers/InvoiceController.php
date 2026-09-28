@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\Address;
+use App\Models\BankDetail;
 use App\Models\Booking;
 use App\Models\Particular;
 use App\Models\InvoiceParticular;
@@ -45,11 +46,25 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Export the invoices list as an Excel-compatible CSV file.
+     * Export invoices as an Excel-compatible CSV file, optionally limited to an invoice date range.
      */
     public function export(Request $request)
     {
+        $request->validate([
+            'from_date' => 'nullable|date',
+            'to_date' => 'nullable|date|after_or_equal:from_date',
+        ], [
+            'to_date.after_or_equal' => 'The To Invoice Date must be on or after the From Invoice Date.',
+        ]);
+
         $query = Invoice::query();
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('billdate', '>=', $request->input('from_date'));
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('billdate', '<=', $request->input('to_date'));
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -61,28 +76,59 @@ class InvoiceController extends Controller
             });
         }
 
-        $invoices = $query->get();
+        $invoices = $query->orderBy('billdate')->orderBy('billno')->get();
 
-        $columns = ['Id', 'Invoice No', 'Invoice Date', 'Client Name', 'Booking No', 'Grand Total', 'Currency', 'Status'];
+        $columns = [
+            'Invoice No', 'Invoice Date', 'Client Code', 'Client Name', 'GSTIN', 'State', 'State Code',
+            'Place of Supply', 'Booking No', 'Non-Taxable Amount', 'Taxable Amount', 'CGST', 'SGST', 'IGST',
+            'Total GST', 'Sub Total', 'Round Off', 'Grand Total', 'Currency', 'Ex. Rate', 'Advance', 'Balance',
+            'Due Date', 'Bank', 'Status',
+        ];
 
-        return response()->streamDownload(function () use ($invoices, $columns) {
+        $formatDate = fn ($date) => $date ? date('d-m-Y', strtotime($date)) : '';
+
+        $filename = 'tax_invoices';
+        if ($request->filled('from_date') || $request->filled('to_date')) {
+            $filename .= '_' . ($request->input('from_date') ?: 'start') . '_to_' . ($request->input('to_date') ?: 'today');
+        }
+
+        return response()->streamDownload(function () use ($invoices, $columns, $formatDate) {
             $file = fopen('php://output', 'w');
+            // UTF-8 BOM so Excel reads client names with special characters correctly
+            fwrite($file, "\xEF\xBB\xBF");
             fputcsv($file, $columns);
 
             foreach ($invoices as $invoice) {
                 fputcsv($file, [
-                    $invoice->id,
                     $invoice->billno,
-                    $invoice->billdate,
+                    $formatDate($invoice->billdate),
+                    $invoice->acode,
                     $invoice->company_name,
+                    $invoice->gst_no,
+                    $invoice->state,
+                    $invoice->state_code,
+                    $invoice->po_supply,
                     $invoice->booking_no,
+                    $invoice->total_non_tax,
+                    $invoice->total_tax,
+                    $invoice->cgst_value,
+                    $invoice->sgst_value,
+                    $invoice->igst_value,
+                    number_format($invoice->cgst_value + $invoice->sgst_value + $invoice->igst_value, 2, '.', ''),
+                    $invoice->total,
+                    $invoice->round_off,
                     $invoice->grand_total,
                     $invoice->currency,
+                    $invoice->ex_rate,
+                    $invoice->advance,
+                    $invoice->balance,
+                    $formatDate($invoice->due_date),
+                    $invoice->bank,
                     $invoice->status,
                 ]);
             }
             fclose($file);
-        }, 'invoices.csv');
+        }, $filename . '.csv');
     }
 
     /**
@@ -101,21 +147,24 @@ class InvoiceController extends Controller
             ->get();
 
         // Load active particulars
-        $particularsMaster = Particular::where('active', 1)
+        $particularsMaster = Particular::where('active', 'Y')
             ->orderBy('particulars')
             ->get();
 
-        // Load banks and signatures from address table
-        // Address table might store banks and signatures under Type 'bank' or 'signature'
-        $banks = Address::where('Type', 'bank')
-            ->orderBy('CompanyName')
+        // Bank accounts for the "Our Bank Details" section of the invoice PDF
+        $banks = BankDetail::where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('bank_name')
             ->get();
+        $defaultBank = BankDetail::getDefault();
+
+        // Signatures are stored in the address table under Type 'signature'
 
         $signatures = Address::where('Type', 'signature')
             ->orderBy('CompanyName')
             ->get();
 
-        return view('invoices.create', compact('clients', 'bookings', 'particularsMaster', 'banks', 'signatures'));
+        return view('invoices.create', compact('clients', 'bookings', 'particularsMaster', 'banks', 'defaultBank', 'signatures'));
     }
 
     /**
@@ -179,7 +228,7 @@ class InvoiceController extends Controller
             'exten_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'credit_days' => 'nullable|integer',
-            'bank' => 'nullable|string|max:200',
+            'bank_detail_id' => 'nullable|integer|exists:bank_details,id',
             'hcode' => 'nullable|string|max:100',
             'total_expense' => 'nullable|numeric',
             
@@ -202,6 +251,7 @@ class InvoiceController extends Controller
             $validated['year'] = date('Y');
         }
 
+        $validated['bank'] = $this->bankName($validated['bank_detail_id'] ?? null);
         $validated['created_by'] = Auth::user()->name ?? 'System';
 
         // Create Invoice
@@ -249,8 +299,9 @@ class InvoiceController extends Controller
     {
         // Load associated particulars
         $particulars = InvoiceParticular::where('BillNo', $invoice->billno)->get();
+        $bankDetail = $invoice->resolveBankDetail();
 
-        return view('invoices.show', compact('invoice', 'particulars'));
+        return view('invoices.show', compact('invoice', 'particulars', 'bankDetail'));
     }
 
     /**
@@ -266,13 +317,17 @@ class InvoiceController extends Controller
             ->orderBy('BookingNo', 'desc')
             ->get();
 
-        $particularsMaster = Particular::where('active', 1)
+        $particularsMaster = Particular::where('active', 'Y')
             ->orderBy('particulars')
             ->get();
 
-        $banks = Address::where('Type', 'bank')
-            ->orderBy('CompanyName')
+        // Include the invoice's current bank even if it has since been deactivated
+        $banks = BankDetail::where('is_active', true)
+            ->when($invoice->bank_detail_id, fn ($q) => $q->orWhere('id', $invoice->bank_detail_id))
+            ->orderByDesc('is_default')
+            ->orderBy('bank_name')
             ->get();
+        $selectedBankId = $invoice->bank_detail_id ?? BankDetail::getDefault()?->id;
 
         $signatures = Address::where('Type', 'signature')
             ->orderBy('CompanyName')
@@ -281,7 +336,7 @@ class InvoiceController extends Controller
         // Get existing line items
         $existingParticulars = InvoiceParticular::where('BillNo', $invoice->billno)->get();
 
-        return view('invoices.edit', compact('invoice', 'clients', 'bookings', 'particularsMaster', 'banks', 'signatures', 'existingParticulars'));
+        return view('invoices.edit', compact('invoice', 'clients', 'bookings', 'particularsMaster', 'banks', 'selectedBankId', 'signatures', 'existingParticulars'));
     }
 
     /**
@@ -345,7 +400,7 @@ class InvoiceController extends Controller
             'exten_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'credit_days' => 'nullable|integer',
-            'bank' => 'nullable|string|max:200',
+            'bank_detail_id' => 'nullable|integer|exists:bank_details,id',
             'hcode' => 'nullable|string|max:100',
             'total_expense' => 'nullable|numeric',
             
@@ -363,6 +418,7 @@ class InvoiceController extends Controller
             $validated['year'] = date('Y');
         }
 
+        $validated['bank'] = $this->bankName($validated['bank_detail_id'] ?? null);
         $validated['updated_by'] = Auth::user()->name ?? 'System';
 
         $oldBillNo = $invoice->billno;
@@ -430,6 +486,7 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         $particulars = InvoiceParticular::where('BillNo', $invoice->billno)->get();
+        $bankDetail = $invoice->resolveBankDetail();
 
         $companyDetail = \App\Models\CompanyDetail::getActive();
         $showIrnQr = $companyDetail ? (bool) $companyDetail->irn_qr_enabled : true;
@@ -458,12 +515,21 @@ class InvoiceController extends Controller
             }
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', compact('invoice', 'particulars', 'qrCodeBase64'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', compact('invoice', 'particulars', 'qrCodeBase64', 'bankDetail'));
         $pdf->setPaper('a4', 'portrait');
         $pdf->setWarnings(false);
         $pdf->setOption('isRemoteEnabled', true);
         
         return $pdf->download("Invoice_{$invoice->billno}.pdf");
+    }
+
+    /**
+     * Bank name stored on the invoice alongside bank_detail_id, for listings and exports.
+     */
+    private function bankName($bankDetailId)
+    {
+        $bank = $bankDetailId ? BankDetail::find($bankDetailId) : null;
+        return $bank?->bank_name;
     }
 }
 

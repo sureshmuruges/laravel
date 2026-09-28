@@ -365,13 +365,17 @@
                         </div>
                         <div class="card-body pt-0 d-flex flex-column gap-3">
                             <div>
-                                <label class="form-label fw-semibold">Select Bank</label>
-                                <select name="bank" class="form-select">
-                                    <option value="YES Bank" {{ $invoice->bank == 'YES Bank' ? 'selected' : '' }}>YES Bank (Default)</option>
-                                    @foreach ($banks as $bank)
-                                        <option value="{{ $bank->CompanyName }}" {{ $invoice->bank == $bank->CompanyName ? 'selected' : '' }}>{{ $bank->CompanyName }}</option>
-                                    @endforeach
+                                <label class="form-label fw-semibold">Bank Account (shown on invoice)</label>
+                                <select name="bank_detail_id" class="form-select">
+                                    @forelse ($banks as $bank)
+                                        <option value="{{ $bank->id }}" {{ old('bank_detail_id', $selectedBankId) == $bank->id ? 'selected' : '' }}>
+                                            {{ $bank->dropdown_label }}{{ $bank->is_default ? ' (Default)' : '' }}{{ $bank->is_active ? '' : ' (Inactive)' }}
+                                        </option>
+                                    @empty
+                                        <option value="">-- No bank accounts added --</option>
+                                    @endforelse
                                 </select>
+                                <div class="form-text">Manage accounts under <a href="{{ route('bank_details.index') }}" target="_blank">Bank Details</a>.</div>
                             </div>
                             <div>
                                 <label class="form-label fw-semibold">Select Signature Authority</label>

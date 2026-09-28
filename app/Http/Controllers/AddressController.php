@@ -27,7 +27,7 @@ class AddressController extends Controller
 
         // Sorting
         $sortField = $request->input('sort', 'Id');
-        $sortDirection = $request->input('direction', 'desc');
+        $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
 
         $allowedSorts = [
             'Id',
@@ -40,9 +40,10 @@ class AddressController extends Controller
             'GSTNo'
         ];
 
-        if (in_array($sortField, $allowedSorts)) {
-            $query->orderBy($sortField, $sortDirection);
+        if (!in_array($sortField, $allowedSorts)) {
+            $sortField = 'Id';
         }
+        $query->orderBy($sortField, $sortDirection);
 
         // Pagination
         $addresses = $query->paginate(10)->withQueryString();

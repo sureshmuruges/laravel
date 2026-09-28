@@ -68,6 +68,7 @@ class Invoice extends Model
         'due_date',
         'credit_days',
         'bank',
+        'bank_detail_id',
         'hcode',
         'total_expense',
         'created_by',
@@ -80,6 +81,22 @@ class Invoice extends Model
     public function particulars()
     {
         return $this->hasMany(InvoiceParticular::class, 'BillNo', 'billno');
+    }
+
+    /**
+     * Bank account selected for the "Our Bank Details" section.
+     */
+    public function bankDetail()
+    {
+        return $this->belongsTo(BankDetail::class, 'bank_detail_id');
+    }
+
+    /**
+     * Bank account to print on the invoice: the selected one, or the default for older invoices.
+     */
+    public function resolveBankDetail()
+    {
+        return $this->bankDetail ?? BankDetail::getDefault();
     }
 
     /**

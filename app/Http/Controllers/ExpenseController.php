@@ -28,7 +28,7 @@ class ExpenseController extends Controller
 
         // Sorting
         $sortField = $request->input('sort', 'id');
-        $sortDirection = $request->input('direction', 'desc');
+        $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
 
         $allowedSorts = ['id', 'JobNo', 'Date', 'CompanyName', 'Total', 'Currency', 'Reference'];
         if (in_array($sortField, $allowedSorts)) {

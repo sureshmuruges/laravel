@@ -392,47 +392,59 @@ if (!function_exists('numberToWords')) {
                 </div>
 
                 <!-- Bank Details -->
+                @if($bankDetail)
                 <div class="bank-box mb-3">
                     <h6 class="text-uppercase fw-bold text-dark fs-8 border-bottom pb-1 mb-2"><i class="fas fa-university me-1.5 text-primary"></i>Bank Payment Instructions</h6>
                     <div class="row align-items-center">
-                        <div class="col-8">
+                        <div class="{{ $bankDetail->upi_qr_path ? 'col-8' : 'col-12' }}">
                             <table class="w-100">
                                 <tr>
                                     <td style="width: 100px;" class="text-muted">Bank Name:</td>
-                                    <td class="fw-bold text-dark">Kotak Mahindra Bank</td>
+                                    <td class="fw-bold text-dark">{{ $bankDetail->bank_name }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Account Name:</td>
-                                    <td class="fw-bold text-dark">{{ $companyDetail ? $companyDetail->company_name : 'AO LOGISTICS' }}</td>
+                                    <td class="fw-bold text-dark">{{ $bankDetail->account_name ?: ($companyDetail ? $companyDetail->company_name : 'AO LOGISTICS') }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Account No:</td>
-                                    <td class="fw-bold text-dark">6450907494 (Current A/c)</td>
+                                    <td class="fw-bold text-dark">{{ $bankDetail->account_number }}</td>
                                 </tr>
+                                @if($bankDetail->ifsc)
                                 <tr>
                                     <td class="text-muted">IFSC Code:</td>
-                                    <td class="fw-bold text-dark">KKBK0008045</td>
+                                    <td class="fw-bold text-dark">{{ $bankDetail->ifsc }}</td>
                                 </tr>
+                                @endif
+                                @if($bankDetail->swift)
                                 <tr>
                                     <td class="text-muted">Swift Code:</td>
-                                    <td class="fw-bold text-dark">KKBKINBBCPC</td>
+                                    <td class="fw-bold text-dark">{{ $bankDetail->swift }}</td>
                                 </tr>
+                                @endif
+                                @if($bankDetail->branch)
                                 <tr>
                                     <td class="text-muted">Branch:</td>
-                                    <td class="text-dark">Sahakara Nagar, Bengaluru - 560092</td>
+                                    <td class="text-dark">{{ $bankDetail->branch }}</td>
                                 </tr>
+                                @endif
+                                @if($bankDetail->upi_id)
                                 <tr>
                                     <td class="text-muted">UPI ID:</td>
-                                    <td class="fw-bold text-dark">9611570671@kotak</td>
+                                    <td class="fw-bold text-dark">{{ $bankDetail->upi_id }}</td>
                                 </tr>
+                                @endif
                             </table>
                         </div>
+                        @if($bankDetail->upi_qr_path)
                         <div class="col-4 text-center">
                             <span class="fs-9 text-muted d-block mb-1 fw-bold">Scan to Pay</span>
-                            <img src="{{ asset('images/upi_qr.png') }}" alt="UPI QR Code" class="img-fluid" style="max-height: 80px; border: 1px solid #dee2e6; padding: 2px; border-radius: 4px;">
+                            <img src="{{ asset($bankDetail->upi_qr_path) }}" alt="UPI QR Code" class="img-fluid" style="max-height: 80px; border: 1px solid #dee2e6; padding: 2px; border-radius: 4px;">
                         </div>
+                        @endif
                     </div>
                 </div>
+                @endif
             </div>
 
             <!-- Numbers Total -->

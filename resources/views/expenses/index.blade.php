@@ -26,47 +26,17 @@
         </div>
 
         <div class="table-responsive">
-            @php
-                if (!function_exists('sortIcon')) {
-                    function sortIcon($field)
-                    {
-                        $sortField = request('sort', 'id');
-                        $sortDirection = request('direction', 'desc');
-                        if ($sortField === $field) {
-                            return $sortDirection === 'asc' ? ' ↑' : ' ↓';
-                        }
-                        return '';
-                    }
-                }
-                if (!function_exists('sortUrl')) {
-                    function sortUrl($field)
-                    {
-                        $sortField = request('sort', 'id');
-                        $sortDirection = request('direction', 'desc');
-                        $direction = ($sortField === $field && $sortDirection === 'asc') ? 'desc' : 'asc';
-                        return request()->fullUrlWithQuery(['sort' => $field, 'direction' => $direction]);
-                    }
-                }
-            @endphp
 
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="py-3"><a href="{{ sortUrl('id') }}"
-                                class="text-dark text-decoration-none fw-bold">ID{!! sortIcon('id') !!}</a></th>
-                        <th class="py-3"><a href="{{ sortUrl('Date') }}"
-                                class="text-dark text-decoration-none fw-bold">Date{!! sortIcon('Date') !!}</a></th>
-                        <th class="py-3"><a href="{{ sortUrl('JobNo') }}" class="text-dark text-decoration-none fw-bold">Job
-                                No{!! sortIcon('JobNo') !!}</a></th>
-                        <th class="py-3"><a href="{{ sortUrl('CompanyName') }}"
-                                class="text-dark text-decoration-none fw-bold">Company{!! sortIcon('CompanyName') !!}</a>
-                        </th>
-                        <th class="py-3"><a href="{{ sortUrl('Total') }}"
-                                class="text-dark text-decoration-none fw-bold">Total{!! sortIcon('Total') !!}</a></th>
-                        <th class="py-3"><a href="{{ sortUrl('Currency') }}"
-                                class="text-dark text-decoration-none fw-bold">Curr{!! sortIcon('Currency') !!}</a></th>
-                        <th class="py-3"><a href="{{ sortUrl('Reference') }}"
-                                class="text-dark text-decoration-none fw-bold">Reference{!! sortIcon('Reference') !!}</a></th>
+                        <th class="py-3"><x-sort-link field="id" default="id">ID</x-sort-link></th>
+                        <th class="py-3"><x-sort-link field="Date" default="id">Date</x-sort-link></th>
+                        <th class="py-3"><x-sort-link field="JobNo" default="id">Job No</x-sort-link></th>
+                        <th class="py-3"><x-sort-link field="CompanyName" default="id">Company</x-sort-link></th>
+                        <th class="py-3"><x-sort-link field="Total" default="id">Total</x-sort-link></th>
+                        <th class="py-3"><x-sort-link field="Currency" default="id">Curr</x-sort-link></th>
+                        <th class="py-3"><x-sort-link field="Reference" default="id">Reference</x-sort-link></th>
                         <th class="py-3 text-center">Actions</th>
                     </tr>
                 </thead>

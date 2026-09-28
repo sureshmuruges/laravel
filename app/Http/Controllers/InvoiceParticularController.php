@@ -78,7 +78,7 @@ class InvoiceParticularController extends Controller
     public function create()
     {
         $products = \App\Models\Particular::select('id', 'particulars', 'hsn', 'gst', 'igst', 'cgst', 'sgst', 'is_service', 'except_particulars')
-            ->where('active', 1)
+            ->where('active', 'Y')
             ->orderBy('particulars')
             ->get();
         return view('invoice_particulars.create', compact('products'));
@@ -123,7 +123,7 @@ class InvoiceParticularController extends Controller
     public function edit(\App\Models\InvoiceParticular $invoice_particular)
     {
         $products = \App\Models\Particular::select('id', 'particulars', 'hsn', 'gst', 'igst', 'cgst', 'sgst', 'is_service', 'except_particulars')
-            ->where('active', 1)
+            ->where('active', 'Y')
             ->orderBy('particulars')
             ->get();
         return view('invoice_particulars.edit', compact('invoice_particular', 'products'));
